@@ -99,6 +99,41 @@ input {
 	margin: 0 0 12px;
 }
 
+.hero-topline {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	gap: 12px;
+	margin-bottom: 12px;
+}
+
+.hero-topline .eyebrow {
+	margin: 0;
+}
+
+.origin-link {
+	display: inline-flex;
+	align-items: center;
+	padding: 8px 12px;
+	border-radius: 999px;
+	border: 1px solid rgba(255, 255, 255, 0.12);
+	background: rgba(255, 255, 255, 0.05);
+	color: var(--text-main);
+	text-decoration: none;
+	font-size: 0.82rem;
+	font-weight: 600;
+	transition:
+		background 0.2s ease,
+		transform 0.2s ease,
+		border-color 0.2s ease;
+}
+
+.origin-link:hover {
+	background: rgba(255, 255, 255, 0.09);
+	border-color: rgba(255, 214, 138, 0.34);
+	transform: translateY(-1px);
+}
+
 .hero-copy h1,
 .card-head h2 {
 	margin: 0;
@@ -521,6 +556,10 @@ input {
 	.hero-copy h1 {
 		max-width: 9ch;
 	}
+
+	.hero-topline {
+		align-items: start;
+	}
 }
 
 @media (max-width: 640px) {
@@ -536,6 +575,11 @@ input {
 
 	.hero-copy h1 {
 		font-size: 2.6rem;
+	}
+
+	.hero-topline {
+		flex-direction: column;
+		align-items: flex-start;
 	}
 
 	.guess-form,

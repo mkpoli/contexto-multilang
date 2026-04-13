@@ -326,7 +326,12 @@
 <div class="page-shell">
 	<section class:compact={hasStarted} class="hero-card">
 		<div class="hero-copy">
-			<p class="eyebrow">Contexto Multilang / Chinese Prototype</p>
+			<div class="hero-topline">
+				<p class="eyebrow">Contexto Multilang / Chinese Prototype</p>
+				<a class="origin-link" href="https://contexto.me/en/" target="_blank" rel="noreferrer">
+					原版遊戲 PT / EN / ES
+				</a>
+			</div>
 			<h1>{hasStarted ? '繼續縮小語義範圍。' : '猜隱藏詞，不猜拼寫，猜語義。'}</h1>
 			{#if !hasStarted}
 				<p class="lede">
