@@ -29,15 +29,10 @@ Why this approach:
 Available commands:
 
 - `uv run zh-download`
-- `uv run ja-download`
 - `uv run zh-download-stopwords`
 - `uv run zh-inspect`
 - `uv run zh-extract`
-- `uv run ja-extract`
 - `uv run zh-segment`
-- `uv run ja-segment --dictionary ../../data/ja/wikimedia/vibrato/system.dic.zst`
-- `uv run ja-build-game-index --all-pages-articles-shards ../../src/lib/generated/ja-game`
-- `uv run ja-analyze-vocab --all-pages-articles-shards`
 - `uv run zh-build-similarity`
 - `uv run zh-build-game-index`
 - `uv run zh-eval-neighbors -- <word> [more_words...]`
@@ -113,6 +108,11 @@ Evaluator:
 - it can also print rank cutoff summaries from the already-built vocab with `--rank-samples`, which is the fastest way to judge `max-vocab` after one build
 - use `--game zh` or `--game ja`, or pass a custom artifact directory with `--input-dir`
 
+Japanese build note:
+
+- the old Python Japanese pipeline has been removed
+- build `ja-game` with the Rust tool in `tools/jawiki-lemma-counter`
+
 Examples:
 
 ```sh
@@ -123,80 +123,6 @@ uv run inspect-game-vocab --game ja --skip-top-freq --rank-samples 100,300,1000,
 
 Japanese full build:
 
-- `ja-download` mirrors the Chinese dump downloader, but defaults to `jawiki`
-- `ja-extract` can still decompress one shard or all downloaded shards, but it is optional for Japanese game building
-- `ja-segment` is now mainly a debugging/prototyping tool; the preferred production path is `ja-build-game-index`
-- `ja-analyze-vocab` runs only the counting pass and prints the frequency curve at chosen rank cutoffs, which is useful for selecting `--max-vocab`
-- `ja-build-game-index` streams XML or `.bz2` shards directly, lemmatizes with Vibrato, filters to content-heavy parts of speech, and builds the final game artifacts without an intermediate segmented corpus
-- the Japanese builder indexes lemma forms, not surface forms, and preserves gameplay matching through a generated surface-to-lemma variant map
-- install `python-vibrato` separately before running Japanese tools: `pip install git+https://github.com/daac-tools/python-vibrato`
-- `python-vibrato` does not ship a dictionary, so download a compatible Vibrato dictionary first, for example `ipadic-mecab-2_7_0/system.dic.zst` from the Vibrato releases page
-- default dictionary location is `../../data/ja/wikimedia/vibrato/system.dic.zst`
-- on this machine, `python-vibrato` segfaults under Python 3.14 but works under Python 3.11; use the Python 3.11 venv for Japanese builds
-- if your existing Python 3.11 venv was created before `ja-build-game-index` was added, call it as `python -m zh_pipeline.ja_build_game_index` instead of relying on the console script
-
-Preferred full build for the Japanese game:
-
-```sh
-cd tools/zh_pipeline
-
-# 1. Download all jawiki pages-articles shards
-uv run ja-download --all-pages-articles-shards --skip-existing
-
-# 2. Ensure the Vibrato dictionary is available
-mkdir -p ../../data/ja/wikimedia/vibrato
-# Place system.dic.zst at:
-# ../../data/ja/wikimedia/vibrato/system.dic.zst
-
-# 3. Put Japanese stopword txt files in ../../data/ja/wikimedia/stopwords
-
-# 4. Build the final ja-game artifacts directly from the bz2 shards
-./.venv311p/bin/python -m zh_pipeline.ja_build_game_index \
-  --all-pages-articles-shards \
-  --input-dir ../../data/ja/wikimedia \
-  ../../src/lib/generated/ja-game \
-  --dictionary ../../data/ja/wikimedia/vibrato/system.dic.zst \
-  --stopwords-dir ../../data/ja/wikimedia/stopwords \
-  --min-count 10 \
-  --max-vocab 50000 \
-  --embedding-dim 256
-```
-
-Quick test build on a small sample:
-
-```sh
-cd tools/zh_pipeline
-./.venv311p/bin/python -m zh_pipeline.ja_build_game_index \
-  ../../data/ja/wikimedia/jawiki-latest-pages-articles1.xml-p1p114794.bz2 \
-  ../../src/lib/generated/ja-game-test \
-  --dictionary ../../data/ja/wikimedia/vibrato/system.dic.zst \
-  --stopwords-dir ../../data/ja/wikimedia/stopwords \
-  --limit-pages 2000 \
-  --min-count 10 \
-  --max-vocab 12000 \
-  --embedding-dim 256
-```
-
-Investigate where to stop the vocabulary:
-
-```sh
-cd tools/zh_pipeline
-./.venv311p/bin/python -m zh_pipeline.ja_analyze_vocab \
-  --all-pages-articles-shards \
-  --input-dir ../../data/ja/wikimedia \
-  --dictionary ../../data/ja/wikimedia/vibrato/system.dic.zst \
-  --stopwords-dir ../../data/ja/wikimedia/stopwords \
-  --min-count 1 \
-  --sample-ranks 100,300,1000,3000,5000,10000,20000,30000,50000,70000,100000
-```
-
-- this prints the lemma and count at each requested rank
-- the count at rank `N` is a practical way to judge whether `--max-vocab N` is still keeping meaningful words or already entering the noisy tail
-
-Operational notes for the full run:
-
-- the latest `jawiki` dump is split across several large shard files, totaling multiple gigabytes compressed
-- direct `ja-build-game-index` from `.bz2` is even more disk-efficient because it also avoids storing a large segmented JSONL
-- you can safely rerun the download step with `--skip-existing`
-- if you do extract XML for debugging, remove it after segmentation to recover space
-- the current Japanese builder indexes lemmas, not surface forms, and keeps a surface-to-lemma alias map for gameplay lookups
+- use `tools/jawiki-lemma-counter` for all Japanese analysis and build steps
+- the Rust builder streams `.bz2` shards directly, indexes lemma forms, and preserves gameplay lookup through a surface-to-lemma variant map
+- see `tools/jawiki-lemma-counter/README.md` for the current commands

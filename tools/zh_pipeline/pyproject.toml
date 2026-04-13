@@ -18,15 +18,10 @@ dependencies = [
 
 [project.scripts]
 zh-download = "zh_pipeline.download:main"
-ja-download = "zh_pipeline.ja_download:main"
 zh-download-stopwords = "zh_pipeline.download_stopwords:main"
 zh-inspect = "zh_pipeline.inspect_dump:main"
 zh-extract = "zh_pipeline.extract_dump:main"
-ja-extract = "zh_pipeline.ja_extract_dump:main"
 zh-segment = "zh_pipeline.segment_dump:main"
-ja-segment = "zh_pipeline.ja_segment_dump:main"
-ja-build-game-index = "zh_pipeline.ja_build_game_index:main"
-ja-analyze-vocab = "zh_pipeline.ja_analyze_vocab:main"
 ain-build-game-index = "zh_pipeline.ain_build_game_index:main"
 zh-build-similarity = "zh_pipeline.build_similarity:main"
 zh-eval-neighbors = "zh_pipeline.eval_neighbors:main"
