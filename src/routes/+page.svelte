@@ -472,7 +472,7 @@
 				<h2>開始猜詞</h2>
 				<div class="card-actions">
 					{#if canShowLengthHint}
-						<button class="ghost-button" type="button" onclick={revealHint}> 提示 </button>
+						<button class="ghost-button" type="button" onclick={revealHint}> 字數提示 </button>
 					{/if}
 					{#if canShowRankHint}
 						<button class="ghost-button" type="button" onclick={revealRankHint}>
