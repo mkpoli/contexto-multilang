@@ -19,10 +19,11 @@
 		latestGuess: GuessResult | null;
 		showClosestWords: boolean;
 		showHint: boolean;
-		rankHint: GuessProfile | null;
+		rankHintUses: number;
 	};
 
 	const SESSION_STORAGE_KEY = 'contexto-multilang:zh-session';
+	const MAX_RANK_HINT_USES = 3;
 
 	const normalize = (value: string) => value.trim().replace(/\s+/g, '');
 
@@ -47,6 +48,43 @@
 	const loggedSimilarityPercent = (rank: number) =>
 		`${Math.round(Number(loggedSimilarity(rank)) * 100)}%`;
 
+	type CharacterHint = {
+		char: string;
+		state: 'exact' | 'present' | 'miss';
+	};
+
+	const getCharacterHints = (word: string, answer: string): CharacterHint[] => {
+		const wordChars = [...word];
+		const answerChars = [...answer];
+		const answerCounts = new Map<string, number>();
+		const result: CharacterHint[] = wordChars.map((char) => ({ char, state: 'miss' }));
+
+		for (const char of answerChars) {
+			answerCounts.set(char, (answerCounts.get(char) ?? 0) + 1);
+		}
+
+		for (let index = 0; index < wordChars.length; index += 1) {
+			if (wordChars[index] === answerChars[index]) {
+				result[index].state = 'exact';
+				answerCounts.set(wordChars[index], (answerCounts.get(wordChars[index]) ?? 1) - 1);
+			}
+		}
+
+		for (let index = 0; index < wordChars.length; index += 1) {
+			if (result[index].state === 'exact') {
+				continue;
+			}
+
+			const remaining = answerCounts.get(wordChars[index]) ?? 0;
+			if (remaining > 0) {
+				result[index].state = 'present';
+				answerCounts.set(wordChars[index], remaining - 1);
+			}
+		}
+
+		return result;
+	};
+
 	const sortHistory = (entries: GuessResult[]) =>
 		[...entries].sort(
 			(a, b) => a.rank - b.rank || b.similarity - a.similarity || a.order - b.order
@@ -61,7 +99,7 @@
 	let latestGuess = $state<GuessResult | null>(null);
 	let showClosestWords = $state(false);
 	let showHint = $state(false);
-	let rankHint = $state<GuessProfile | null>(null);
+	let rankHintUses = $state(0);
 	let loadingPuzzle = $state(true);
 	let sessionReady = false;
 
@@ -69,6 +107,7 @@
 	let solved = $derived(history.some((entry) => entry.rank === 1));
 	let bestRank = $derived(history.length ? Math.min(...history.map((entry) => entry.rank)) : null);
 	let answerLength = $derived(puzzle ? [...puzzle.answer].length : 0);
+	let rankHintUsesRemaining = $derived(MAX_RANK_HINT_USES - rankHintUses);
 	let revealedClosestWords = $derived(solved && puzzle ? puzzle.closestWords.slice(0, 8) : []);
 
 	function pickRankHint(): GuessProfile | null {
@@ -87,24 +126,67 @@
 
 		if (bestRank === null) {
 			return (
-				candidates.find((entry) => entry.rank >= 80 && entry.rank <= 180) ??
-				candidates.find((entry) => entry.rank >= 40 && entry.rank <= 220) ??
-				candidates[0]
+				candidates.find((entry) => entry.rank >= 120 && entry.rank <= 320) ??
+				candidates.find((entry) => entry.rank >= 80 && entry.rank <= 420) ??
+				candidates[candidates.length - 1]
 			);
 		}
 
-		const nearbyBetter =
-			candidates.find(
-				(entry) => entry.rank < bestRank && entry.rank >= Math.max(2, bestRank - 30)
-			) ??
-			candidates.find(
-				(entry) => entry.rank < bestRank && entry.rank >= Math.max(2, bestRank - 60)
-			) ??
-			candidates.find(
-				(entry) => entry.rank < bestRank && entry.rank >= Math.max(2, bestRank - 100)
-			);
+		const betterCandidates = candidates
+			.filter((entry) => entry.rank < bestRank)
+			.sort((a, b) => b.rank - a.rank || a.similarity - b.similarity);
 
-		return nearbyBetter ?? null;
+		if (betterCandidates.length === 0) {
+			return null;
+		}
+
+		const windows = [
+			Math.max(15, Math.floor(bestRank * 0.15)),
+			Math.max(35, Math.floor(bestRank * 0.3)),
+			Math.max(70, Math.floor(bestRank * 0.5)),
+			bestRank
+		];
+
+		for (const window of windows) {
+			const nearby = betterCandidates.find((entry) => entry.rank >= Math.max(2, bestRank - window));
+			if (nearby) {
+				return nearby;
+			}
+		}
+
+		return betterCandidates[0] ?? null;
+	}
+
+	function applyGuessResult(match: GuessProfile, source: 'user' | 'hint') {
+		guessCount += 1;
+
+		const nextGuess = {
+			...match,
+			order: guessCount,
+			state: match.rank === 1 ? 'hit' : 'known'
+		} satisfies GuessResult;
+
+		history = sortHistory([...history, nextGuess]);
+		latestGuess = nextGuess;
+
+		if (source === 'hint') {
+			feedback =
+				match.rank === 1
+					? `接近提示已自動加入，而且直接猜中了「${puzzle?.answer}」。`
+					: `接近提示已自動加入「${match.word}」，目前排名第 ${match.rank}。`;
+			feedbackTone = match.rank === 1 ? 'success' : 'neutral';
+			return;
+		}
+
+		feedback =
+			match.rank === 1
+				? match.note
+					? `答對了，隱藏詞就是「${puzzle?.answer}」。${match.note}`
+					: `答對了，隱藏詞就是「${puzzle?.answer}」。`
+				: match.note
+					? `「${match.word}」很接近，目前排名第 ${match.rank}。${match.note}`
+					: `「${match.word}」很接近，目前排名第 ${match.rank}。`;
+		feedbackTone = match.rank === 1 ? 'success' : 'neutral';
 	}
 
 	function restoreSession(): boolean {
@@ -128,7 +210,7 @@
 			latestGuess = session.latestGuess;
 			showClosestWords = session.showClosestWords;
 			showHint = session.showHint;
-			rankHint = session.rankHint;
+			rankHintUses = session.rankHintUses ?? 0;
 			loadingPuzzle = false;
 			return true;
 		} catch {
@@ -151,7 +233,7 @@
 			latestGuess,
 			showClosestWords,
 			showHint,
-			rankHint
+			rankHintUses
 		};
 		localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(session));
 	}
@@ -169,7 +251,7 @@
 			latestGuess = null;
 			showClosestWords = false;
 			showHint = false;
-			rankHint = null;
+			rankHintUses = 0;
 			feedback = '新的一局開始了，繼續猜一個中文詞語。';
 			feedbackTone = 'neutral';
 		} catch {
@@ -239,10 +321,8 @@
 		}
 
 		const { match, knownWord } = (await response.json()) as GuessLookupResponse;
-		guessCount += 1;
 
 		if (!match) {
-			guessCount -= 1;
 			feedback = knownWord
 				? `「${word}」在資料庫裡，但目前還無法完成字詞匹配，請換一個近義詞再試。`
 				: `我們目前不知道「${word}」的相似度，請換一個資料庫裡已有的詞。`;
@@ -253,31 +333,13 @@
 
 		const canonicalExisting = history.find((entry) => entry.word === match.word);
 		if (canonicalExisting) {
-			guessCount -= 1;
 			feedback = `你已經猜過「${match.word}」了，它目前排名第 ${canonicalExisting.rank}。`;
 			feedbackTone = 'warning';
 			guess = '';
 			return;
 		}
 
-		const nextGuess = {
-			...match,
-			order: guessCount,
-			state: match.rank === 1 ? 'hit' : 'known'
-		} satisfies GuessResult;
-
-		history = sortHistory([...history, nextGuess]);
-		latestGuess = nextGuess;
-
-		feedback =
-			match.rank === 1
-				? match.note
-					? `答對了，隱藏詞就是「${puzzle.answer}」。${match.note}`
-					: `答對了，隱藏詞就是「${puzzle.answer}」。`
-				: match.note
-					? `「${match.word}」很接近，目前排名第 ${match.rank}。${match.note}`
-					: `「${match.word}」很接近，目前排名第 ${match.rank}。`;
-		feedbackTone = match.rank === 1 ? 'success' : 'neutral';
+		applyGuessResult(match, 'user');
 		guess = '';
 	}
 
@@ -302,6 +364,12 @@
 			return;
 		}
 
+		if (rankHintUses >= MAX_RANK_HINT_USES) {
+			feedback = '接近提示已用完，最多只能使用 3 次。';
+			feedbackTone = 'warning';
+			return;
+		}
+
 		const nextHint = pickRankHint();
 		if (!nextHint) {
 			feedback = '目前沒有更合適的接近提示了。';
@@ -309,9 +377,11 @@
 			return;
 		}
 
-		rankHint = nextHint;
-		feedback = `接近提示：可以試試「${nextHint.word}」，它的排名是 #${nextHint.rank}。`;
-		feedbackTone = 'neutral';
+		rankHintUses += 1;
+		applyGuessResult(
+			{ ...nextHint, note: `接近提示 ${rankHintUses}/${MAX_RANK_HINT_USES}` },
+			'hint'
+		);
 	}
 </script>
 
@@ -376,9 +446,9 @@
 						class="ghost-button"
 						type="button"
 						onclick={revealRankHint}
-						disabled={loadingPuzzle || !puzzle || solved}
+						disabled={loadingPuzzle || !puzzle || solved || rankHintUses >= MAX_RANK_HINT_USES}
 					>
-						接近提示
+						接近提示 {rankHintUsesRemaining}/{MAX_RANK_HINT_USES}
 					</button>
 					<button class="ghost-button" type="button" onclick={resetGame} disabled={loadingPuzzle}>
 						換一題
@@ -411,14 +481,6 @@
 				<div class="hint-panel">
 					<span class="label">提示</span>
 					<strong>答案長度：{answerLength} 個字</strong>
-				</div>
-			{/if}
-
-			{#if rankHint && !solved}
-				<div class="hint-panel rank-hint-panel">
-					<span class="label">接近提示</span>
-					<strong>試試「{rankHint.word}」</strong>
-					<p>它目前排名第 #{rankHint.rank}。</p>
 				</div>
 			{/if}
 
@@ -468,7 +530,11 @@
 									></div>
 									<div class="guess-main">
 										<div class="guess-word-group">
-											<p class="guess-word">{entry.word}</p>
+											<p class="guess-word">
+												{#each getCharacterHints(entry.word, puzzle?.answer ?? '') as charHint}
+													<span class={`guess-char char-${charHint.state}`}>{charHint.char}</span>
+												{/each}
+											</p>
 										</div>
 										<div class="guess-rank">
 											<span>#{entry.rank}</span>
@@ -504,7 +570,11 @@
 						></div>
 						<div class="guess-main">
 							<div class="guess-word-group">
-								<p class="guess-word">{latestGuess.word}</p>
+								<p class="guess-word">
+									{#each getCharacterHints(latestGuess.word, puzzle?.answer ?? '') as charHint}
+										<span class={`guess-char char-${charHint.state}`}>{charHint.char}</span>
+									{/each}
+								</p>
 							</div>
 							<div class="guess-rank">
 								<span>#{latestGuess.rank}</span>
@@ -537,7 +607,11 @@
 							></div>
 							<div class="guess-main">
 								<div class="guess-word-group">
-									<p class="guess-word">{entry.word}</p>
+									<p class="guess-word">
+										{#each getCharacterHints(entry.word, puzzle?.answer ?? '') as charHint}
+											<span class={`guess-char char-${charHint.state}`}>{charHint.char}</span>
+										{/each}
+									</p>
 								</div>
 								<div class="guess-rank">
 									<span>#{entry.rank}</span>
