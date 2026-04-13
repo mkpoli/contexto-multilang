@@ -39,6 +39,7 @@ Available commands:
 - `uv run zh-build-similarity`
 - `uv run zh-build-game-index`
 - `uv run zh-eval-neighbors -- <word> [more_words...]`
+- `uv run inspect-game-vocab --game zh <word> [more_words...]`
 
 Outputs:
 
@@ -105,6 +106,16 @@ Evaluator:
 - `zh-eval-neighbors` is a quick sanity-check tool for the similarity output
 - it prints nearest neighbors for one or more sample words from the JSONL rows
 - add `--contains` to also show substring matches when an exact row is missing
+- `inspect-game-vocab` inspects the generated game artifacts used by the frontend/backend gameplay path
+- it prints corpus stats, the most frequent words, and nearest neighbors from the stored dense embeddings
+- use `--game zh` or `--game ja`, or pass a custom artifact directory with `--input-dir`
+
+Examples:
+
+```sh
+uv run inspect-game-vocab --game zh --top-freq 10 季節 歌曲
+uv run inspect-game-vocab --game ja --top-freq 10 季節 --contains 音楽
+```
 
 Japanese prototype ingestion:
 

@@ -28,6 +28,7 @@ ja-segment = "zh_pipeline.ja_segment_dump:main"
 zh-build-similarity = "zh_pipeline.build_similarity:main"
 zh-eval-neighbors = "zh_pipeline.eval_neighbors:main"
 zh-build-game-index = "zh_pipeline.build_game_index:main"
+inspect-game-vocab = "zh_pipeline.inspect_game_vocab:main"
 
 [tool.uv]
 package = true
