@@ -408,9 +408,16 @@
 			return;
 		}
 
+		const targetChar = puzzle.answer[nextCharacterToReveal];
+		const guessedWordWithChar = history.find((entry) => entry.word.includes(targetChar));
+
 		revealedCharacterHints = [...revealedCharacterHints, nextCharacterToReveal];
-		const char = puzzle.answer[nextCharacterToReveal];
-		feedback = `字元提示：第 ${nextCharacterToReveal + 1} 個字是「${char}」。`;
+
+		if (guessedWordWithChar) {
+			feedback = `字元提示：答案包含某個你已猜過的字。`;
+		} else {
+			feedback = `字元提示：答案包含某個你尚未猜到的字。`;
+		}
 		feedbackTone = 'neutral';
 	}
 </script>
