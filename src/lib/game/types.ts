@@ -1,4 +1,4 @@
-export type GameId = 'zh' | 'ja';
+export type GameId = 'zh' | 'ja' | 'ain';
 
 export type GuessProfile = {
 	word: string;

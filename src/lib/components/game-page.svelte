@@ -3,7 +3,7 @@
 
 	import type { GamePuzzle, GuessLookupResponse, GuessProfile } from '$lib/game/types';
 
-	type PageGame = 'zh' | 'ja';
+	type PageGame = 'zh' | 'ja' | 'ain';
 
 	type GuessResult = GuessProfile & {
 		order: number;
@@ -206,6 +206,67 @@
 			noMoreProximityFeedback: 'これ以上ちょうどよい近さヒントはありません。',
 			characterHintFeedback: '文字ヒント：{n} 文字目は「{char}」です。',
 			proximityHintNote: '近さヒント {used}/{max}'
+		},
+		ain: {
+			pageTitle: 'Contexto Multilang - Ainu Prototype',
+			metaDescription:
+				'A Contexto-style prototype built from an Ainu JSONL corpus with a simple word tokenizer.',
+			eyebrow: 'Contexto Multilang / Ainu Prototype',
+			datasetName: 'Ainu corpus prototype',
+			freshTitle: 'Guess the hidden Ainu word by meaning.',
+			startedTitle: 'Keep narrowing the semantic space.',
+			intro:
+				'A random answer is drawn from the Ainu corpus. Each guess returns an exact semantic rank, where smaller is closer.',
+			compactIntro:
+				'Your guesses are already sorted from closest to farthest. Push the best ranks first.',
+			progressLabel: 'Progress',
+			currentBuildLabel: 'Current dataset',
+			categoryLabel: 'Category',
+			bestRankLabel: 'Best rank',
+			difficultyLabel: 'Difficulty hint',
+			difficultyValue: 'Answer comes from the Ainu corpus answer pool',
+			startGuessingLabel: 'Start guessing',
+			lengthHintLabel: 'Length hint',
+			proximityHintLabel: 'Proximity hint',
+			characterHintButton: 'Character {n} hint',
+			newPuzzleLabel: 'New puzzle',
+			submitGuessLabel: 'Submit guess',
+			placeholder: 'e.g. kamuy, aynu, mosir',
+			hintLabel: 'Hint',
+			answerLengthLabel: 'Answer length',
+			guessesLabel: 'Guesses',
+			statusLabel: 'Status',
+			solvedLabel: 'Solved',
+			inProgressLabel: 'In progress',
+			hiddenWordLabel: 'Hidden word',
+			closestWordsLabel: 'Closest words',
+			showLabel: 'Show',
+			hideLabel: 'Hide',
+			guessHistoryLabel: 'Guess history',
+			entriesSuffix: 'entries',
+			latestGuessLabel: 'Latest guess',
+			emptyStateTitle: 'No guesses yet.',
+			emptyStateBody: 'Try a common Ainu word like "kamuy" or "aynu".',
+			defaultFeedback: 'Enter an Ainu word to see how close it is to the hidden answer.',
+			newPuzzleFeedback: 'A new Ainu puzzle is ready.',
+			loadFailedFeedback: 'Failed to load the Ainu puzzle data. Please try again.',
+			loadingFeedback: 'The puzzle is still loading.',
+			emptyGuessFeedback: 'Enter an Ainu word first.',
+			duplicateGuessFeedback: 'You already guessed "{word}". It is currently ranked #{rank}.',
+			lookupFailedFeedback: 'There was a problem looking up similarity. Please try again.',
+			knownWordUnmatchedFeedback:
+				'"{word}" is in the dataset, but it could not be matched cleanly. Try a nearby word.',
+			unknownWordFeedback: '"{word}" is not available in the current dataset. Try another word.',
+			hintSolvedFeedback:
+				'The proximity hint auto-submitted and solved the puzzle with "{answer}".',
+			hintAppliedFeedback: 'The proximity hint auto-submitted "{word}", now ranked #{rank}.',
+			solvedFeedback: 'Solved. The hidden word is "{answer}". {note}',
+			closeGuessFeedback: '"{word}" is close, currently ranked #{rank}. {note}',
+			lengthHintFeedback: 'Hint: the answer is {count} characters long.',
+			proximityExhaustedFeedback: 'No proximity hints remaining. Maximum: 3.',
+			noMoreProximityFeedback: 'No better proximity hint is available right now.',
+			characterHintFeedback: 'Character hint: character {n} is "{char}".',
+			proximityHintNote: 'Proximity hint {used}/{max}'
 		}
 	} satisfies Record<PageGame, GameCopy>;
 
@@ -293,7 +354,6 @@
 	let sessionStorageKey = $derived(`contexto-multilang:${game}-session`);
 	let apiBase = $derived(`/api/${game}`);
 	let hasStarted = $derived(history.length > 0);
-	let canSwitchGame = $derived(!hasStarted);
 	let solved = $derived(history.some((entry) => entry.rank === 1));
 	let bestRank = $derived(history.length ? Math.min(...history.map((entry) => entry.rank)) : null);
 	let answerLength = $derived(puzzle ? [...puzzle.answer].length : 0);
@@ -626,24 +686,9 @@
 						原版遊戲 PT / EN / ES
 					</a>
 					<div class="switcher" aria-label="Game selector">
-						{#if canSwitchGame || game === 'zh'}
-							<a
-								class:active={game === 'zh'}
-								aria-disabled={!canSwitchGame && game !== 'zh'}
-								href="/zh">ZH</a
-							>
-						{:else}
-							<span>ZH</span>
-						{/if}
-						{#if canSwitchGame || game === 'ja'}
-							<a
-								class:active={game === 'ja'}
-								aria-disabled={!canSwitchGame && game !== 'ja'}
-								href="/ja">JA</a
-							>
-						{:else}
-							<span>JA</span>
-						{/if}
+						<a class:active={game === 'zh'} href="/zh">ZH</a>
+						<a class:active={game === 'ja'} href="/ja">JA</a>
+						<a class:active={game === 'ain'} href="/ain">AIN</a>
 					</div>
 				</div>
 			</div>

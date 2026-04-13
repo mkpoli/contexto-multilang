@@ -1,3 +1,3 @@
 export function match(param: string) {
-	return param === 'zh' || param === 'ja';
+	return param === 'zh' || param === 'ja' || param === 'ain';
 }
