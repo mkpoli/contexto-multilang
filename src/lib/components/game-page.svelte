@@ -286,6 +286,8 @@
 	let revealedCharacterHints = $state<number[]>([]);
 	let loadingPuzzle = $state(true);
 	let sessionReady = false;
+	let initializedGame: PageGame | null = null;
+	let loadVersion = 0;
 
 	let gameCopy = $derived(GAME_COPY[game]);
 	let sessionStorageKey = $derived(`contexto-multilang:${game}-session`);
@@ -426,12 +428,29 @@
 		localStorage.setItem(sessionStorageKey, JSON.stringify(session));
 	}
 
+	function resetRuntimeState() {
+		puzzle = null;
+		guess = '';
+		guessCount = 0;
+		history = [];
+		latestGuess = null;
+		showClosestWords = false;
+		showHint = false;
+		rankHintUses = 0;
+		revealedCharacterHints = [];
+		feedbackTone = 'neutral';
+		loadingPuzzle = true;
+	}
+
 	async function loadPuzzle() {
+		const currentLoadVersion = ++loadVersion;
 		loadingPuzzle = true;
 		try {
 			const response = await fetch(`${apiBase}/puzzle`);
 			if (!response.ok) throw new Error('Failed to load puzzle');
-			puzzle = (await response.json()) as GamePuzzle;
+			const nextPuzzle = (await response.json()) as GamePuzzle;
+			if (currentLoadVersion != loadVersion) return;
+			puzzle = nextPuzzle;
 			guessCount = 0;
 			history = [];
 			latestGuess = null;
@@ -442,22 +461,42 @@
 			feedback = gameCopy.newPuzzleFeedback;
 			feedbackTone = 'neutral';
 		} catch {
+			if (currentLoadVersion != loadVersion) return;
 			feedback = gameCopy.loadFailedFeedback;
 			feedbackTone = 'warning';
 			puzzle = null;
 		} finally {
-			loadingPuzzle = false;
+			if (currentLoadVersion == loadVersion) {
+				loadingPuzzle = false;
+			}
 		}
 	}
 
-	onMount(() => {
+	function initializeGameState() {
+		loadVersion += 1;
+		resetRuntimeState();
 		feedback = gameCopy.defaultFeedback;
+		if (!restoreSession()) {
+			void loadPuzzle();
+			return;
+		}
+		loadingPuzzle = false;
+	}
+
+	onMount(() => {
 		sessionReady = true;
-		if (!restoreSession()) void loadPuzzle();
+		initializeGameState();
+		initializedGame = game;
 	});
 
 	$effect(() => {
-		if (!sessionReady) return;
+		if (!sessionReady || initializedGame === null || initializedGame === game) return;
+		initializeGameState();
+		initializedGame = game;
+	});
+
+	$effect(() => {
+		if (!sessionReady || initializedGame !== game) return;
 		if (!puzzle) {
 			localStorage.removeItem(sessionStorageKey);
 			return;
