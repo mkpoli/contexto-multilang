@@ -37,6 +37,7 @@ Available commands:
 - `uv run zh-segment`
 - `uv run ja-segment --dictionary ../../data/ja/wikimedia/vibrato/system.dic.zst`
 - `uv run ja-build-game-index --all-pages-articles-shards ../../src/lib/generated/ja-game`
+- `uv run ja-analyze-vocab --all-pages-articles-shards`
 - `uv run zh-build-similarity`
 - `uv run zh-build-game-index`
 - `uv run zh-eval-neighbors -- <word> [more_words...]`
@@ -109,6 +110,7 @@ Evaluator:
 - add `--contains` to also show substring matches when an exact row is missing
 - `inspect-game-vocab` inspects the generated game artifacts used by the frontend/backend gameplay path
 - it prints corpus stats, the most frequent words, and nearest neighbors from the stored dense embeddings
+- it can also print rank cutoff summaries from the already-built vocab with `--rank-samples`, which is the fastest way to judge `max-vocab` after one build
 - use `--game zh` or `--game ja`, or pass a custom artifact directory with `--input-dir`
 
 Examples:
@@ -116,6 +118,7 @@ Examples:
 ```sh
 uv run inspect-game-vocab --game zh --top-freq 10 季節 歌曲
 uv run inspect-game-vocab --game ja --top-freq 10 季節 --contains 音楽
+uv run inspect-game-vocab --game ja --skip-top-freq --rank-samples 100,300,1000,3000,5000,10000,20000,30000,50000
 ```
 
 Japanese full build:
@@ -123,6 +126,7 @@ Japanese full build:
 - `ja-download` mirrors the Chinese dump downloader, but defaults to `jawiki`
 - `ja-extract` can still decompress one shard or all downloaded shards, but it is optional for Japanese game building
 - `ja-segment` is now mainly a debugging/prototyping tool; the preferred production path is `ja-build-game-index`
+- `ja-analyze-vocab` runs only the counting pass and prints the frequency curve at chosen rank cutoffs, which is useful for selecting `--max-vocab`
 - `ja-build-game-index` streams XML or `.bz2` shards directly, lemmatizes with Vibrato, filters to content-heavy parts of speech, and builds the final game artifacts without an intermediate segmented corpus
 - the Japanese builder indexes lemma forms, not surface forms, and preserves gameplay matching through a generated surface-to-lemma variant map
 - install `python-vibrato` separately before running Japanese tools: `pip install git+https://github.com/daac-tools/python-vibrato`
@@ -172,6 +176,22 @@ cd tools/zh_pipeline
   --max-vocab 12000 \
   --embedding-dim 256
 ```
+
+Investigate where to stop the vocabulary:
+
+```sh
+cd tools/zh_pipeline
+./.venv311p/bin/python -m zh_pipeline.ja_analyze_vocab \
+  --all-pages-articles-shards \
+  --input-dir ../../data/ja/wikimedia \
+  --dictionary ../../data/ja/wikimedia/vibrato/system.dic.zst \
+  --stopwords-dir ../../data/ja/wikimedia/stopwords \
+  --min-count 1 \
+  --sample-ranks 100,300,1000,3000,5000,10000,20000,30000,50000,70000,100000
+```
+
+- this prints the lemma and count at each requested rank
+- the count at rank `N` is a practical way to judge whether `--max-vocab N` is still keeping meaningful words or already entering the noisy tail
 
 Operational notes for the full run:
 

@@ -52,6 +52,22 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Skip printing the top-frequency list.",
     )
+    parser.add_argument(
+        "--rank-samples",
+        default=None,
+        help="Comma-separated rank positions to inspect from the built vocab frequency list.",
+    )
+    parser.add_argument(
+        "--rank-windows",
+        default=None,
+        help="Comma-separated cutoff ranks to inspect with surrounding rows, e.g. 10000,20000,30000.",
+    )
+    parser.add_argument(
+        "--window-radius",
+        type=int,
+        default=10,
+        help="How many rows before and after each rank window center to print.",
+    )
     return parser
 
 
@@ -107,6 +123,70 @@ def print_top_frequency(vocab: list[dict], limit: int) -> None:
             f"{index:>2}. {display_word(row)}"
             f"  count={row['count']} doc_frequency={row['doc_frequency']}"
         )
+
+
+def parse_rank_samples(raw: str | None) -> list[int]:
+    if not raw:
+        return []
+    values = sorted({int(part.strip()) for part in raw.split(",") if part.strip()})
+    return [value for value in values if value > 0]
+
+
+def print_rank_samples(vocab: list[dict], ranks: list[int]) -> None:
+    if not ranks:
+        return
+    ordered = sorted(
+        vocab,
+        key=lambda row: (-row["count"], -row["doc_frequency"], row["word"]),
+    )
+    print("\nRank samples")
+    for rank in ranks:
+        if rank > len(ordered):
+            print(f"{rank:>6}: out of range (only {len(ordered)} rows)")
+            continue
+        row = ordered[rank - 1]
+        print(
+            f"{rank:>6}: {display_word(row)}"
+            f"  count={row['count']} doc_frequency={row['doc_frequency']}"
+        )
+
+    print("\nCutoff summary")
+    print(" rank  min_count_at_rank  min_doc_freq_at_rank")
+    for rank in ranks:
+        if rank > len(ordered):
+            continue
+        row = ordered[rank - 1]
+        print(f" {rank:>5} {row['count']:>18} {row['doc_frequency']:>21}")
+
+
+def parse_rank_windows(raw: str | None) -> list[int]:
+    if not raw:
+        return []
+    values = sorted({int(part.strip()) for part in raw.split(",") if part.strip()})
+    return [value for value in values if value > 0]
+
+
+def print_rank_windows(vocab: list[dict], centers: list[int], radius: int) -> None:
+    if not centers:
+        return
+    ordered = sorted(
+        vocab,
+        key=lambda row: (-row["count"], -row["doc_frequency"], row["word"]),
+    )
+    for center in centers:
+        print(f"\nWindow around rank {center}")
+        if center > len(ordered):
+            print(f"  out of range (only {len(ordered)} rows)")
+            continue
+        start = max(1, center - radius)
+        end = min(len(ordered), center + radius)
+        for rank in range(start, end + 1):
+            row = ordered[rank - 1]
+            marker = "<-- cutoff" if rank == center else ""
+            print(
+                f"{rank:>6}. {display_word(row)}"
+                f"  count={row['count']} doc_frequency={row['doc_frequency']} {marker}".rstrip()
+            )
 
 
 def print_contains_matches(word: str, vocab: list[dict], limit: int = 12) -> None:
@@ -170,6 +250,21 @@ def main() -> None:
     input_dir = resolve_input_dir(args)
     metadata = load_json(input_dir / "metadata.json")
     vocab = load_json(input_dir / "vocab.json")
+
+    print(f"Loaded game vocab from {input_dir}")
+    print_stats(metadata, vocab)
+
+    if not args.skip_top_freq:
+        print_top_frequency(vocab, args.top_freq)
+    print_rank_samples(vocab, parse_rank_samples(args.rank_samples))
+
+    rank_windows = parse_rank_windows(args.rank_windows)
+    if rank_windows:
+        print_rank_windows(vocab, rank_windows, args.window_radius)
+
+    if not args.words:
+        return
+
     variants = load_json(input_dir / "variants.json")
     embeddings = load_embeddings(
         input_dir,
@@ -177,12 +272,6 @@ def main() -> None:
         embedding_dim=metadata["embedding_dim"],
     )
     word_to_id = {row["word"]: index for index, row in enumerate(vocab)}
-
-    print(f"Loaded game vocab from {input_dir}")
-    print_stats(metadata, vocab)
-
-    if not args.skip_top_freq:
-        print_top_frequency(vocab, args.top_freq)
 
     for word in args.words:
         candidate_ids = resolve_query_ids(word, word_to_id, variants)
