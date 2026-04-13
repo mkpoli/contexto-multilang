@@ -441,6 +441,12 @@ input {
 	font-weight: 700;
 }
 
+.guess-word-group {
+	display: flex;
+	align-items: baseline;
+	min-width: 0;
+}
+
 .guess-rank {
 	text-align: right;
 	white-space: nowrap;

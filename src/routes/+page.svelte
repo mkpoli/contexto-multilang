@@ -39,6 +39,14 @@
 		return Math.max(2, Math.min(100, Math.round(100 - Math.log10(rank) * 24)));
 	};
 
+	const loggedSimilarity = (rank: number) => {
+		if (rank <= 1) return '1.000';
+		return (1 / Math.log10(rank + 9)).toFixed(3);
+	};
+
+	const loggedSimilarityPercent = (rank: number) =>
+		`${Math.round(Number(loggedSimilarity(rank)) * 100)}%`;
+
 	const sortHistory = (entries: GuessResult[]) =>
 		[...entries].sort(
 			(a, b) => a.rank - b.rank || b.similarity - a.similarity || a.order - b.order
@@ -444,14 +452,19 @@
 					{#if showClosestWords}
 						<div class="history-list reveal-list">
 							{#each revealedClosestWords as entry}
-								<article class={`guess-row ${rankTone(entry.rank)}`}>
+								<article
+									class={`guess-row ${rankTone(entry.rank)}`}
+									title={`相似度 ${entry.similarity}%｜對數 ${loggedSimilarityPercent(entry.rank)}`}
+								>
 									<div
 										class="heat-fill"
 										style={`clip-path: inset(0 ${100 - barFillPercent(entry.rank)}% 0 0);`}
 										aria-hidden="true"
 									></div>
 									<div class="guess-main">
-										<p class="guess-word">{entry.word}</p>
+										<div class="guess-word-group">
+											<p class="guess-word">{entry.word}</p>
+										</div>
 										<div class="guess-rank">
 											<span>#{entry.rank}</span>
 										</div>
@@ -475,14 +488,19 @@
 					<div class="latest-guess-header">
 						<span class="label">最新猜測</span>
 					</div>
-					<article class={`guess-row guess-row-featured ${rankTone(latestGuess.rank)}`}>
+					<article
+						class={`guess-row guess-row-featured ${rankTone(latestGuess.rank)}`}
+						title={`相似度 ${latestGuess.similarity}%｜對數 ${loggedSimilarityPercent(latestGuess.rank)}`}
+					>
 						<div
 							class="heat-fill"
 							style={`clip-path: inset(0 ${100 - barFillPercent(latestGuess.rank)}% 0 0);`}
 							aria-hidden="true"
 						></div>
 						<div class="guess-main">
-							<p class="guess-word">{latestGuess.word}</p>
+							<div class="guess-word-group">
+								<p class="guess-word">{latestGuess.word}</p>
+							</div>
 							<div class="guess-rank">
 								<span>#{latestGuess.rank}</span>
 							</div>
@@ -503,14 +521,19 @@
 			{:else}
 				<div class="history-list">
 					{#each history as entry}
-						<article class={`guess-row ${rankTone(entry.rank)}`}>
+						<article
+							class={`guess-row ${rankTone(entry.rank)}`}
+							title={`相似度 ${entry.similarity}%｜對數 ${loggedSimilarityPercent(entry.rank)}`}
+						>
 							<div
 								class="heat-fill"
 								style={`clip-path: inset(0 ${100 - barFillPercent(entry.rank)}% 0 0);`}
 								aria-hidden="true"
 							></div>
 							<div class="guess-main">
-								<p class="guess-word">{entry.word}</p>
+								<div class="guess-word-group">
+									<p class="guess-word">{entry.word}</p>
+								</div>
 								<div class="guess-rank">
 									<span>#{entry.rank}</span>
 								</div>
