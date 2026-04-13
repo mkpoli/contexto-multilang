@@ -20,6 +20,7 @@
 		showClosestWords: boolean;
 		showHint: boolean;
 		rankHintUses: number;
+		revealedCharacterHints: number[];
 	};
 
 	const SESSION_STORAGE_KEY = 'contexto-multilang:zh-session';
@@ -100,6 +101,7 @@
 	let showClosestWords = $state(false);
 	let showHint = $state(false);
 	let rankHintUses = $state(0);
+	let revealedCharacterHints = $state<number[]>([]);
 	let loadingPuzzle = $state(true);
 	let sessionReady = false;
 
@@ -109,6 +111,20 @@
 	let answerLength = $derived(puzzle ? [...puzzle.answer].length : 0);
 	let rankHintUsesRemaining = $derived(MAX_RANK_HINT_USES - rankHintUses);
 	let revealedClosestWords = $derived(solved && puzzle ? puzzle.closestWords.slice(0, 8) : []);
+	let canShowLengthHint = $derived(!showHint && !solved);
+	let canShowRankHint = $derived(!solved && rankHintUses < MAX_RANK_HINT_USES);
+	let canRevealCharacter = $derived(
+		!solved &&
+			answerLength >= 2 &&
+			rankHintUses >= MAX_RANK_HINT_USES &&
+			revealedCharacterHints.length < answerLength - 1
+	);
+	let nextCharacterToReveal = $derived(
+		canRevealCharacter
+			? ([...Array(answerLength - 1).keys()].find((i) => !revealedCharacterHints.includes(i + 1)) ??
+					-1) + 1
+			: -1
+	);
 
 	function pickRankHint(): GuessProfile | null {
 		if (!puzzle) {
@@ -211,6 +227,7 @@
 			showClosestWords = session.showClosestWords;
 			showHint = session.showHint;
 			rankHintUses = session.rankHintUses ?? 0;
+			revealedCharacterHints = session.revealedCharacterHints ?? [];
 			loadingPuzzle = false;
 			return true;
 		} catch {
@@ -233,7 +250,8 @@
 			latestGuess,
 			showClosestWords,
 			showHint,
-			rankHintUses
+			rankHintUses,
+			revealedCharacterHints
 		};
 		localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(session));
 	}
@@ -252,6 +270,7 @@
 			showClosestWords = false;
 			showHint = false;
 			rankHintUses = 0;
+			revealedCharacterHints = [];
 			feedback = '新的一局開始了，繼續猜一個中文詞語。';
 			feedbackTone = 'neutral';
 		} catch {
@@ -383,6 +402,17 @@
 			'hint'
 		);
 	}
+
+	function revealCharacterHint() {
+		if (!puzzle || solved || nextCharacterToReveal < 0) {
+			return;
+		}
+
+		revealedCharacterHints = [...revealedCharacterHints, nextCharacterToReveal];
+		const char = puzzle.answer[nextCharacterToReveal];
+		feedback = `字元提示：第 ${nextCharacterToReveal + 1} 個字是「${char}」。`;
+		feedbackTone = 'neutral';
+	}
 </script>
 
 <svelte:head>
@@ -434,22 +464,19 @@
 			<div class="card-head">
 				<h2>開始猜詞</h2>
 				<div class="card-actions">
-					<button
-						class="ghost-button"
-						type="button"
-						onclick={revealHint}
-						disabled={loadingPuzzle || !puzzle || showHint || solved}
-					>
-						{showHint ? '已顯示提示' : '提示'}
-					</button>
-					<button
-						class="ghost-button"
-						type="button"
-						onclick={revealRankHint}
-						disabled={loadingPuzzle || !puzzle || solved || rankHintUses >= MAX_RANK_HINT_USES}
-					>
-						接近提示 {rankHintUsesRemaining}/{MAX_RANK_HINT_USES}
-					</button>
+					{#if canShowLengthHint}
+						<button class="ghost-button" type="button" onclick={revealHint}> 提示 </button>
+					{/if}
+					{#if canShowRankHint}
+						<button class="ghost-button" type="button" onclick={revealRankHint}>
+							接近提示 {rankHintUsesRemaining}/{MAX_RANK_HINT_USES}
+						</button>
+					{/if}
+					{#if canRevealCharacter && nextCharacterToReveal >= 0}
+						<button class="ghost-button" type="button" onclick={revealCharacterHint}>
+							第 {nextCharacterToReveal + 1} 字提示
+						</button>
+					{/if}
 					<button class="ghost-button" type="button" onclick={resetGame} disabled={loadingPuzzle}>
 						換一題
 					</button>
