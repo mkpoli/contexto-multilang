@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 import json
 import time
+import unicodedata
 from collections import Counter, defaultdict
 from pathlib import Path
 
@@ -71,8 +72,14 @@ def tokenize(input_text: str) -> list[str]:
         if not surface or surface.isspace():
             continue
         if WORD_PATTERN.fullmatch(surface):
-            tokens.append(surface)
+            tokens.append(surface.lower())
     return tokens
+
+
+def strip_diacritics(token: str) -> str:
+    normalized = unicodedata.normalize("NFKD", token)
+    stripped = "".join(char for char in normalized if not unicodedata.combining(char))
+    return unicodedata.normalize("NFC", stripped)
 
 
 def iter_records(input_path: Path):
@@ -152,7 +159,7 @@ def build_cooccurrence(
             if token_id is None:
                 continue
             variants[token].add(token_id)
-            variants[token.lower()].add(token_id)
+            variants[strip_diacritics(token)].add(token_id)
             token_ids.append(token_id)
         if not token_ids:
             continue
