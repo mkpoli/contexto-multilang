@@ -11,6 +11,10 @@ What it does:
 - supports a fast frequency/cutoff analysis mode
 - can build `ja-game` artifacts compatible with the app runtime
 
+Default vocab selection keeps all document frequencies unless you pass `--max-doc-ratio`.
+This avoids dropping very common but still useful terms such as `日本` during the final
+game build.
+
 Analyze cutoff candidates:
 
 ```sh
@@ -73,4 +77,5 @@ Notes:
 - the progress bar is based on compressed bytes read, so it stays bounded during concurrent counting
 - counting is parallelized by shard
 - cooccurrence/build is currently single-process inside the Rust tool
+- pass `--max-doc-ratio <value>` only if you intentionally want to drop ultra-common terms
 - the wiki cleaner is lighter than the Python `mwparserfromhell` path, so inspect the resulting vocab before replacing the production dataset
