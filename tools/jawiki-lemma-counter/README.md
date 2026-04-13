@@ -60,7 +60,7 @@ cargo run --release -- \
   --dictionary ../../data/ja/wikimedia/vibrato/system.dic.zst \
   --stopwords-dir ../../data/ja/wikimedia/stopwords \
   --min-count 10 \
-  --max-vocab 20000 \
+  --max-vocab 30000 \
   --embedding-dim 256 \
   --build-output-dir ../../src/lib/generated/ja-game
 ```
