@@ -73,7 +73,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--limit-pages", type=int, default=None)
     parser.add_argument("--min-count", type=int, default=3)
     parser.add_argument("--min-length", type=int, default=1)
-    parser.add_argument("--max-doc-ratio", type=float, default=0.4)
+    parser.add_argument("--max-doc-ratio", type=float, default=1.0)
     parser.add_argument("--max-vocab", type=int, default=12000)
     parser.add_argument("--window-size", type=int, default=4)
     parser.add_argument("--embedding-dim", type=int, default=128)

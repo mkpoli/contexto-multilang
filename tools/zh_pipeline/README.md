@@ -78,6 +78,7 @@ uv run zh-build-similarity \
 - `zh-build-game-index` also reuses the segmented JSONL and produces the artifacts used by the frontend/backend gameplay path
 - the builders use integer-indexed cooccurrence rows internally to reduce Python string/hash overhead
 - both builders now print per-step timing summaries so you can see where build time is going
+- Chinese and Ainu builders now keep all document frequencies by default; pass `--max-doc-ratio <value>` only if you intentionally want to exclude ultra-common terms
 
 Game-serving approach:
 
