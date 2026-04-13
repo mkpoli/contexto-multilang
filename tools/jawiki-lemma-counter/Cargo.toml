@@ -1,0 +1,20 @@
+[package]
+name = "jawiki-lemma-counter"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+anyhow = "1.0"
+bzip2 = "0.6"
+clap = { version = "4.5", features = ["derive"] }
+html-escape = "0.2"
+indicatif = "0.18"
+quick-xml = "0.39"
+rand = "0.8"
+rand_distr = "0.4"
+rayon = "1.11"
+regex = "1.12"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+vibrato = "0.5.2"
+zstd = "0.13"
