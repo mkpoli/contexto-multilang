@@ -18,6 +18,31 @@ from .timing import format_seconds, iter_progress, timed_step
 
 TOKEN_PATTERN = regex.compile(r"\s+|([\p{L}=]+)|(\p{P})", regex.UNICODE)
 WORD_PATTERN = regex.compile(r"^[\p{L}=]+$", regex.UNICODE)
+AINU_WORD_PATTERN = regex.compile(r"^[a-zA-Zâîûêôáíúéó=\-_'’\[\]]+$")
+APOSTROPHE_SPLIT_PATTERN = regex.compile(r"^(['’‘])?([^'’‘]*)(['’‘])?$")
+PREFIXES = [
+    "ku",
+    "k",
+    "en",
+    "in",
+    "ci",
+    "c",
+    "un",
+    "a",
+    "i",
+    "an",
+    "e",
+    "eci",
+    "ec",
+]
+SUFFIXES = ["an", "as"]
+PREFIX_GROUP = rf"((?:{'|'.join(PREFIXES)})=)?"
+SUFFIX_GROUP = rf"(=(?:{'|'.join(SUFFIXES)}))?"
+AFFIX_PATTERN = regex.compile(rf"{PREFIX_GROUP}{PREFIX_GROUP}([a-z/-]+){SUFFIX_GROUP}")
+WORD_SPLIT_PATTERN = regex.compile(
+    r"((?:\.\.\.(\.\.\.)?)|[a-zA-Zâîûêôáíúéó=\-_'’\[\]]+|\d+|[<>\.,‘\"“”])|\s+"
+)
+LETTER_PATTERN = regex.compile(r"[a-zA-Zâîûêôáíúéó]")
 DEFAULT_INPUT_PATH = Path("../../data/ain/ainu-corpora/data.jsonl")
 DEFAULT_STOPWORDS_DIR = Path("../../data/ain/stopwords")
 DEFAULT_GAME_INDEX_DIR = Path("../../src/lib/generated/ain-game")
@@ -65,15 +90,77 @@ def load_optional_stopwords(stopwords_dir: Path) -> set[str]:
         return set()
 
 
+def split_affixes(word: str) -> list[str]:
+    if word.count("=") + word.count("-") >= 2:
+        parts = AFFIX_PATTERN.match(word)
+        if not parts:
+            return [word]
+        return [part for part in parts.groups() if part]
+
+    parts = regex.split(r"([-=])", word)
+    if len(parts) == 1:
+        return [word]
+    try:
+        a, sep, b = parts
+    except ValueError:
+        return [word]
+    if len(a) > len(b):
+        return [a, sep + b]
+    return [a + sep, b]
+
+
+def split_affixing_apostrophes(word: str) -> list[str]:
+    if len(word) < 2:
+        return [word]
+    match = APOSTROPHE_SPLIT_PATTERN.match(word)
+    if not match:
+        return [word]
+    prefix, middle, suffix = match.groups()
+    if prefix and suffix:
+        return [prefix, middle, suffix]
+    if prefix:
+        return [prefix, middle]
+    if suffix:
+        return [middle, suffix]
+    return [word]
+
+
+def is_word(word: str) -> bool:
+    return bool(AINU_WORD_PATTERN.match(word)) and bool(LETTER_PATTERN.search(word))
+
+
+def split_sentence_words(input_text: str) -> list[str]:
+    return [
+        part
+        for part in WORD_SPLIT_PATTERN.split(input_text)
+        if part and not part.isspace()
+    ]
+
+
 def tokenize(input_text: str) -> list[str]:
-    tokens: list[str] = []
-    for match in TOKEN_PATTERN.finditer(input_text):
-        surface = match.group(0)
-        if not surface or surface.isspace():
+    words = split_sentence_words(input_text)
+    words = [piece for word in words for piece in split_affixing_apostrophes(word)]
+    words = [piece for word in words for piece in split_affixes(word)]
+    return [word.lower() for word in words if word and is_word(word)]
+
+
+def token_alias_groups(input_text: str) -> list[tuple[str, list[str]]]:
+    groups: list[tuple[str, list[str]]] = []
+    for raw_word in split_sentence_words(input_text):
+        lowered = raw_word.lower()
+        parts = [
+            piece
+            for word in split_affixing_apostrophes(lowered)
+            for piece in split_affixes(word)
+        ]
+        parts = [part for part in parts if part and is_word(part)]
+        if not parts:
             continue
-        if WORD_PATTERN.fullmatch(surface):
-            tokens.append(surface.lower())
-    return tokens
+        groups.append((lowered, parts))
+        stripped = strip_diacritics(lowered)
+        if stripped != lowered:
+            groups.append((stripped, parts))
+    return groups
 
 
 def strip_diacritics(token: str) -> str:
@@ -148,11 +235,13 @@ def build_cooccurrence(
     ):
         if limit_pages is not None and processed_pages >= limit_pages:
             break
+        text = record["text"]
         tokens = [
             token
-            for token in tokenize(record["text"])
+            for token in tokenize(text)
             if len(token) >= min_length and token not in stopwords
         ]
+        alias_groups = token_alias_groups(text)
         token_ids: list[int] = []
         for token in tokens:
             token_id = token_to_index.get(token)
@@ -161,6 +250,16 @@ def build_cooccurrence(
             variants[token].add(token_id)
             variants[strip_diacritics(token)].add(token_id)
             token_ids.append(token_id)
+        for alias, parts in alias_groups:
+            alias_ids = [
+                token_to_index[token]
+                for token in parts
+                if len(token) >= min_length
+                and token not in stopwords
+                and token in token_to_index
+            ]
+            for token_id in alias_ids:
+                variants[alias].add(token_id)
         if not token_ids:
             continue
 
