@@ -105,6 +105,23 @@
 	let loadingPuzzle = $state(true);
 	let sessionReady = false;
 
+	const getFeedbackForRank = (word: string, rank: number, note?: string): string => {
+		const base = `「${word}」`;
+		const notePart = note ? ` ${note}` : '';
+
+		if (rank === 1) {
+			return note ? `答對了，隱藏詞就是「${word}」。${note}` : `答對了，隱藏詞就是「${word}」。`;
+		}
+		if (rank <= 10) return `${base}就在附近！目前排名第 ${rank}。${notePart}`;
+		if (rank <= 50) return `${base}非常接近，目前排名第 ${rank}。${notePart}`;
+		if (rank <= 200) return `${base}很接近，目前排名第 ${rank}。${notePart}`;
+		if (rank <= 500) return `${base}有點接近，目前排名第 ${rank}。${notePart}`;
+		if (rank <= 1000) return `${base}距離不遠，目前排名第 ${rank}。${notePart}`;
+		if (rank <= 5000) return `${base}離得還算近，目前排名第 ${rank}。${notePart}`;
+		if (rank <= 20000) return `${base}有點距離，目前排名第 ${rank}。${notePart}`;
+		return `${base}還差得遠，目前排名第 ${rank}。${notePart}`;
+	};
+
 	let hasStarted = $derived(history.length > 0);
 	let solved = $derived(history.some((entry) => entry.rank === 1));
 	let bestRank = $derived(history.length ? Math.min(...history.map((entry) => entry.rank)) : null);
@@ -189,19 +206,16 @@
 			feedback =
 				match.rank === 1
 					? `接近提示已自動加入，而且直接猜中了「${puzzle?.answer}」。`
-					: `接近提示已自動加入「${match.word}」，目前排名第 ${match.rank}。`;
+					: getFeedbackForRank(
+							match.word,
+							match.rank,
+							`接近提示 ${rankHintUses}/${MAX_RANK_HINT_USES}`
+						);
 			feedbackTone = match.rank === 1 ? 'success' : 'neutral';
 			return;
 		}
 
-		feedback =
-			match.rank === 1
-				? match.note
-					? `答對了，隱藏詞就是「${puzzle?.answer}」。${match.note}`
-					: `答對了，隱藏詞就是「${puzzle?.answer}」。`
-				: match.note
-					? `「${match.word}」很接近，目前排名第 ${match.rank}。${match.note}`
-					: `「${match.word}」很接近，目前排名第 ${match.rank}。`;
+		feedback = getFeedbackForRank(match.word, match.rank, match.note);
 		feedbackTone = match.rank === 1 ? 'success' : 'neutral';
 	}
 
@@ -374,7 +388,7 @@
 		}
 
 		showHint = true;
-		feedback = `提示：答案共有 ${answerLength} 個字。`;
+		feedback = `字數提示：答案共有 ${answerLength} 個字。`;
 		feedbackTone = 'neutral';
 	}
 
