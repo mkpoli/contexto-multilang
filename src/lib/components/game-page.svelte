@@ -300,7 +300,10 @@
 	let canShowLengthHint = $derived(!showHint && !solved);
 	let canShowRankHint = $derived(!solved && rankHintUses < MAX_RANK_HINT_USES);
 	let canRevealCharacter = $derived(
-		!solved && answerLength >= 2 && revealedCharacterHints.length < answerLength - 1
+		!solved &&
+			answerLength >= 2 &&
+			rankHintUses >= MAX_RANK_HINT_USES &&
+			revealedCharacterHints.length < answerLength - 1
 	);
 	let nextCharacterToReveal = $derived(
 		canRevealCharacter
