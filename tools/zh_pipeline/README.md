@@ -29,10 +29,13 @@ Why this approach:
 Available commands:
 
 - `uv run zh-download`
+- `uv run ja-download`
 - `uv run zh-download-stopwords`
 - `uv run zh-inspect`
 - `uv run zh-extract`
+- `uv run ja-extract`
 - `uv run zh-segment`
+- `uv run ja-segment -- --dictionary ../../data/ja/wikimedia/vibrato/system.dic.zst`
 - `uv run zh-build-similarity`
 - `uv run zh-build-game-index`
 - `uv run zh-eval-neighbors -- <word> [more_words...]`
@@ -102,3 +105,26 @@ Evaluator:
 - `zh-eval-neighbors` is a quick sanity-check tool for the similarity output
 - it prints nearest neighbors for one or more sample words from the JSONL rows
 - add `--contains` to also show substring matches when an exact row is missing
+
+Japanese prototype ingestion:
+
+- `ja-download` mirrors the Chinese dump downloader, but defaults to `jawiki`
+- `ja-extract` decompresses the selected `jawiki` shard into raw XML
+- `ja-segment` cleans wiki markup the same way as `zh-segment`, then tokenizes Japanese text with `python-vibrato`
+- install `python-vibrato` separately before running `ja-segment`: `pip install git+https://github.com/daac-tools/python-vibrato`
+- `python-vibrato` does not ship a dictionary, so download a compatible Vibrato dictionary first, for example `ipadic-mecab-2_7_0/system.dic.zst` from the Vibrato releases page
+- default dictionary location is `../../data/ja/wikimedia/vibrato/system.dic.zst`
+- when running console scripts through `uv run`, pass flags directly to the script, without an extra `--`
+- on this machine, `python-vibrato` segfaults under Python 3.14 but works under Python 3.11; if needed, create a separate 3.11 venv just for `ja-segment`
+
+Suggested Japanese workflow:
+
+```sh
+uv run ja-download
+uv run ja-extract
+mkdir -p ../../data/ja/wikimedia/vibrato
+# Download and extract a compatible Vibrato dictionary archive there, for example
+# `ipadic-mecab-2_7_0.tar.xz` from https://github.com/daac-tools/vibrato/releases,
+# then copy its `system.dic.zst` to ../../data/ja/wikimedia/vibrato/system.dic.zst
+uv run ja-segment --dictionary ../../data/ja/wikimedia/vibrato/system.dic.zst --limit-pages 5000
+```
