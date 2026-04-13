@@ -34,6 +34,11 @@
 		return 'tone-cool';
 	};
 
+	const barFillPercent = (rank: number) => {
+		if (rank <= 1) return 100;
+		return Math.max(2, Math.min(100, Math.round(100 - Math.log10(rank) * 24)));
+	};
+
 	const sortHistory = (entries: GuessResult[]) =>
 		[...entries].sort(
 			(a, b) => a.rank - b.rank || b.similarity - a.similarity || a.order - b.order
@@ -442,7 +447,7 @@
 								<article class={`guess-row ${rankTone(entry.rank)}`}>
 									<div
 										class="heat-fill"
-										style={`clip-path: inset(0 ${100 - entry.similarity}% 0 0);`}
+										style={`clip-path: inset(0 ${100 - barFillPercent(entry.rank)}% 0 0);`}
 										aria-hidden="true"
 									></div>
 									<div class="guess-main">
@@ -473,7 +478,7 @@
 					<article class={`guess-row guess-row-featured ${rankTone(latestGuess.rank)}`}>
 						<div
 							class="heat-fill"
-							style={`clip-path: inset(0 ${100 - latestGuess.similarity}% 0 0);`}
+							style={`clip-path: inset(0 ${100 - barFillPercent(latestGuess.rank)}% 0 0);`}
 							aria-hidden="true"
 						></div>
 						<div class="guess-main">
@@ -501,7 +506,7 @@
 						<article class={`guess-row ${rankTone(entry.rank)}`}>
 							<div
 								class="heat-fill"
-								style={`clip-path: inset(0 ${100 - entry.similarity}% 0 0);`}
+								style={`clip-path: inset(0 ${100 - barFillPercent(entry.rank)}% 0 0);`}
 								aria-hidden="true"
 							></div>
 							<div class="guess-main">
