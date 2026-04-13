@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import bz2
 import json
 import os
 import threading
@@ -35,19 +36,39 @@ if TYPE_CHECKING:
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        description="Segment Japanese words from a Wikimedia XML dump shard."
+        description="Segment Japanese words from Wikimedia XML or bz2 dump shards."
     )
     parser.add_argument(
-        "xml_path",
+        "input_path",
         nargs="?",
         default=str(DEFAULT_DATA_DIR / DEFAULT_XML_NAME),
-        help="Path to the decompressed XML dump.",
+        help="Path to one XML or bz2 dump shard.",
     )
     parser.add_argument(
         "output_path",
         nargs="?",
         default=str(DEFAULT_DATA_DIR / DEFAULT_OUTPUT_NAME),
-        help="Path to the JSONL output file.",
+        help="Path to the JSONL output file in single-file mode.",
+    )
+    parser.add_argument(
+        "--all-pages-articles-shards",
+        action="store_true",
+        help="Segment every jawiki pages-articles shard found in the input directory.",
+    )
+    parser.add_argument(
+        "--input-dir",
+        default=str(DEFAULT_DATA_DIR),
+        help="Directory to scan in batch mode.",
+    )
+    parser.add_argument(
+        "--output-dir",
+        default=str(DEFAULT_DATA_DIR),
+        help="Directory where segmented JSONL files should be written in batch mode.",
+    )
+    parser.add_argument(
+        "--skip-existing",
+        action="store_true",
+        help="Skip shard outputs that already exist.",
     )
     parser.add_argument(
         "--dictionary",
@@ -164,8 +185,13 @@ def process_page_batch(pages: list[dict[str, object]]) -> list[dict[str, object]
     return records
 
 
-def iter_batches(xml_path: Path, batch_size: int):
-    page_iter = iter_pages(xml_path)
+def open_page_source(input_path: Path):
+    if input_path.suffix == ".bz2":
+        return bz2.BZ2File(input_path, "rb")
+    return input_path.open("rb")
+
+
+def iter_batches(page_iter, batch_size: int):
     while True:
         batch = list(islice(page_iter, batch_size))
         if not batch:
@@ -177,22 +203,36 @@ def write_record(target, record: dict[str, object]) -> None:
     target.write(json.dumps(record, ensure_ascii=False) + "\n")
 
 
-def main() -> None:
-    args = build_parser().parse_args()
-    xml_path = Path(args.xml_path).resolve()
-    output_path = Path(args.output_path).resolve()
-    dictionary_path = Path(args.dictionary).resolve()
-    output_path.parent.mkdir(parents=True, exist_ok=True)
-    init_segmenter(dictionary_path)
+def default_segmented_output_name(input_path: Path) -> str:
+    base_name = input_path.name[:-4] if input_path.suffix == ".bz2" else input_path.name
+    return f"{base_name}.segmented.jsonl"
 
+
+def batch_inputs(input_dir: Path) -> list[Path]:
+    inputs = sorted(input_dir.glob("jawiki-latest-pages-articles*.bz2"))
+    if inputs:
+        return inputs
+    inputs = sorted(input_dir.glob("jawiki-latest-pages-articles*"))
+    inputs = [path for path in inputs if path.is_file() and path.suffix != ".jsonl"]
+    if not inputs:
+        raise FileNotFoundError(f"No jawiki pages-articles shards found in {input_dir}")
+    return inputs
+
+
+def segment_input(
+    input_path: Path, output_path: Path, args: argparse.Namespace
+) -> None:
+    output_path.parent.mkdir(parents=True, exist_ok=True)
     processed_pages = 0
 
-    with output_path.open("w", encoding="utf-8") as target:
+    with (
+        open_page_source(input_path) as source,
+        output_path.open("w", encoding="utf-8") as target,
+    ):
+        page_iter = iter_pages(source)
         if args.limit_pages is not None or args.workers <= 1:
             for page in iter_progress(
-                iter_pages(xml_path),
-                total=None,
-                title="Segmenting pages",
+                page_iter, total=None, title=f"Segmenting {input_path.name}"
             ):
                 record = process_page(page)
                 if record is None:
@@ -206,19 +246,43 @@ def main() -> None:
             with ThreadPoolExecutor(max_workers=max(1, args.workers)) as pool:
                 batch_iter = pool.map(
                     process_page_batch,
-                    iter_batches(xml_path, max(1, args.batch_size)),
+                    iter_batches(page_iter, max(1, args.batch_size)),
                     chunksize=1,
                 )
                 for batch_records in iter_progress(
                     batch_iter,
                     total=None,
-                    title="Segmenting batches",
+                    title=f"Segmenting {input_path.name}",
                 ):
                     for record in batch_records:
                         write_record(target, record)
                         processed_pages += 1
 
     print(f"Wrote {processed_pages} tokenized pages to {output_path}")
+
+
+def main() -> None:
+    args = build_parser().parse_args()
+    dictionary_path = Path(args.dictionary).resolve()
+    init_segmenter(dictionary_path)
+
+    if args.all_pages_articles_shards:
+        input_dir = Path(args.input_dir).resolve()
+        output_dir = Path(args.output_dir).resolve()
+        for input_path in batch_inputs(input_dir):
+            output_path = output_dir / default_segmented_output_name(input_path)
+            if args.skip_existing and output_path.exists():
+                print(f"Skipping existing {output_path}")
+                continue
+            segment_input(input_path, output_path, args)
+        return
+
+    input_path = Path(args.input_path).resolve()
+    output_path = Path(args.output_path).resolve()
+    if args.skip_existing and output_path.exists():
+        print(f"Skipping existing {output_path}")
+        return
+    segment_input(input_path, output_path, args)
 
 
 if __name__ == "__main__":

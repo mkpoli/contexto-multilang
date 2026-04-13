@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import xml.etree.ElementTree as ET
 from pathlib import Path
+from typing import BinaryIO
 
 
 MEDIAWIKI_NS = "{http://www.mediawiki.org/xml/export-0.11/}"
@@ -12,8 +13,8 @@ def child_text(node: ET.Element, tag: str) -> str:
     return child.text if child is not None and child.text is not None else ""
 
 
-def iter_pages(xml_path: Path):
-    context = ET.iterparse(xml_path, events=("end",))
+def iter_pages(xml_source: Path | BinaryIO):
+    context = ET.iterparse(xml_source, events=("end",))
     for _, element in context:
         if element.tag != f"{MEDIAWIKI_NS}page":
             continue
