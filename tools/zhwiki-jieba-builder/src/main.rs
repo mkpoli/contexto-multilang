@@ -8,6 +8,7 @@ use std::sync::Arc;
 use anyhow::{bail, Context, Result};
 use bzip2::read::BzDecoder;
 use clap::Parser;
+use ferrous_opencc::{config::BuiltinConfig, OpenCC};
 use html_escape::decode_html_entities;
 use indicatif::{ProgressBar, ProgressStyle};
 use jieba_rs::Jieba;
@@ -161,6 +162,11 @@ struct BuildState {
     total_pages: usize,
 }
 
+struct VariantConverters {
+    to_traditional: OpenCC,
+    to_simplified: OpenCC,
+}
+
 #[derive(Serialize)]
 struct VocabRow<'a> {
     word: &'a str,
@@ -189,6 +195,7 @@ fn main() -> Result<()> {
     let total_bytes = total_input_bytes(&input_paths)?;
     let stopwords = Arc::new(load_stopwords(&args.stopwords_dir)?);
     let cleaner = Arc::new(Cleaner::new()?);
+    let variant_converters = VariantConverters::new()?;
     let sample_ranks = parse_sample_ranks(&args.sample_ranks)?;
     let jieba = Arc::new(Jieba::new());
 
@@ -245,6 +252,7 @@ fn main() -> Result<()> {
             jieba,
             stopwords,
             cleaner,
+            &variant_converters,
             build_progress.clone(),
             args.limit_pages,
             args.min_length,
@@ -689,6 +697,7 @@ fn build_state(
     jieba: Arc<Jieba>,
     stopwords: Arc<HashSet<String>>,
     cleaner: Arc<Cleaner>,
+    variant_converters: &VariantConverters,
     progress: ProgressBar,
     limit_pages: Option<usize>,
     min_length: usize,
@@ -702,7 +711,7 @@ fn build_state(
         .collect();
     let mut state = BuildState {
         rows: vec![HashMap::new(); selected.len()],
-        variants: HashMap::new(),
+        variants: build_variants(selected, variant_converters),
         total_pages: 0,
     };
     let mut processed_pages = 0usize;
@@ -724,15 +733,9 @@ fn build_state(
             }
             processed_pages += 1;
             state.total_pages += 1;
-            for token in &title_tokens {
-                if let Some(&token_id) = token_to_index.get(token.as_str()) {
-                    add_alias(&mut state.variants, token, token_id);
-                }
-            }
             let mut token_ids = Vec::new();
             for token in &text_tokens {
                 if let Some(&token_id) = token_to_index.get(token.as_str()) {
-                    add_alias(&mut state.variants, token, token_id);
                     token_ids.push(token_id);
                 }
             }
@@ -755,6 +758,37 @@ fn build_state(
         })?;
     }
     Ok(state)
+}
+
+impl VariantConverters {
+    fn new() -> Result<Self> {
+        Ok(Self {
+            to_traditional: OpenCC::from_config(BuiltinConfig::S2t)?,
+            to_simplified: OpenCC::from_config(BuiltinConfig::T2s)?,
+        })
+    }
+}
+
+fn build_variants(
+    selected: &[SelectedToken],
+    variant_converters: &VariantConverters,
+) -> HashMap<String, HashSet<usize>> {
+    let mut variants = HashMap::new();
+    for (token_id, row) in selected.iter().enumerate() {
+        let token = row.token.as_str();
+        add_alias(&mut variants, token, token_id);
+        add_alias(
+            &mut variants,
+            &variant_converters.to_traditional.convert(token),
+            token_id,
+        );
+        add_alias(
+            &mut variants,
+            &variant_converters.to_simplified.convert(token),
+            token_id,
+        );
+    }
+    variants
 }
 
 fn add_alias(variants: &mut HashMap<String, HashSet<usize>>, alias: &str, token_id: usize) {

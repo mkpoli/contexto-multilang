@@ -7,6 +7,7 @@ What it does:
 - streams `zhwiki` `.bz2` shards directly
 - tokenizes Chinese text with `jieba-rs`
 - applies local Chinese stopword lists
+- preserves Simplified and Traditional aliases for gameplay lookup
 - supports a fast frequency/cutoff analysis mode
 - can build `zh-game` artifacts compatible with the app runtime
 
@@ -45,7 +46,7 @@ cargo run --release -- \
   --input-dir ../../data/zh/wikimedia \
   --stopwords-dir ../../data/zh/wikimedia/stopwords \
   --min-count 10 \
-  --max-vocab 20000 \
+  --max-vocab 30000 \
   --embedding-dim 256 \
   --build-output-dir ../../src/lib/generated/zh-game
 ```
