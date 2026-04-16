@@ -23,3 +23,4 @@ Notes:
 - use `--input-dir` to inspect a custom artifact directory instead
 - `game-vocab-stats` handles corpus stats and cutoff analysis only
 - `game-vocab-neighbors` handles query lookup and nearest-neighbor inspection only
+- the Chinese and Japanese build pipelines live in `tools/zh-vocab-pipeline` and `tools/ja-vocab-pipeline`

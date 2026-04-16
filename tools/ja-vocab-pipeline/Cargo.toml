@@ -1,5 +1,5 @@
 [package]
-name = "jawiki-lemma-counter"
+name = "ja-vocab-pipeline"
 version = "0.1.0"
 edition = "2024"
 

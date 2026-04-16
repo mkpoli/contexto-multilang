@@ -1,10 +1,10 @@
-## zhwiki-jieba-builder
+## zh-vocab-pipeline
 
-Rust tooling for Chinese Wikipedia word analysis and game-index building using `jieba-rs`.
+Rust tooling for the end-to-end Chinese vocabulary pipeline.
 
 What it does:
 
-- streams `zhwiki` `.bz2` shards directly
+- streams Chinese article dump `.bz2` shards directly
 - tokenizes Chinese text with `jieba-rs`
 - applies local Chinese stopword lists
 - preserves Simplified and Traditional aliases for gameplay lookup
@@ -13,7 +13,7 @@ What it does:
 
 Default vocab selection keeps all document frequencies unless you pass `--max-doc-ratio`.
 This avoids dropping very common but still useful terms such as `中国` during the final
-game build.
+vocab build.
 
 Analyze cutoff candidates:
 

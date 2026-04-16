@@ -1,10 +1,10 @@
-## jawiki-lemma-counter
+## ja-vocab-pipeline
 
-Rust tooling for Japanese Wikipedia lemma analysis and game-index building.
+Rust tooling for the end-to-end Japanese vocabulary pipeline.
 
 What it does:
 
-- streams `jawiki` `.bz2` shards directly
+- streams Japanese article dump `.bz2` shards directly
 - tokenizes with `vibrato`
 - extracts lemma forms for content-heavy parts of speech
 - applies local Japanese stopword lists
@@ -13,7 +13,7 @@ What it does:
 
 Default vocab selection keeps all document frequencies unless you pass `--max-doc-ratio`.
 This avoids dropping very common but still useful terms such as `日本` during the final
-game build.
+vocab build.
 
 Analyze cutoff candidates:
 
