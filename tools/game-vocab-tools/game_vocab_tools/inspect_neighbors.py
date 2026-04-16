@@ -16,34 +16,43 @@ from game_vocab_tools.common import (
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        description="Inspect generated game vocab nearest neighbors."
+        description="Look up one or more words and print their nearest neighbors.",
+        epilog=(
+            "Examples:\n"
+            "  game-vocab-neighbors --game zh 季節 歌曲\n"
+            "  game-vocab-neighbors --game ja --contains 季節 音楽\n"
+            "  game-vocab-neighbors --input-dir src/lib/generated/zh-game 春天"
+        ),
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        usage="%(prog)s [options] WORD [WORD ...]",
     )
     parser.add_argument(
         "words",
         nargs="+",
-        help="Query words to inspect.",
+        metavar="WORD",
+        help="One or more query words to inspect.",
     )
     parser.add_argument(
         "--game",
         choices=["zh", "ja"],
         default="zh",
-        help="Which generated game index to inspect.",
+        help="Built game index to inspect (default: %(default)s).",
     )
     parser.add_argument(
         "--input-dir",
         default=None,
-        help="Override the generated game directory instead of --game.",
+        help="Inspect a custom generated game directory instead of using --game.",
     )
     parser.add_argument(
         "--top-neighbors",
         type=int,
         default=12,
-        help="How many nearest neighbors to print per query word.",
+        help="Nearest neighbors to print for each query word (default: %(default)s).",
     )
     parser.add_argument(
         "--contains",
         action="store_true",
-        help="If an exact word is missing, also print substring matches.",
+        help="If an exact word is missing, also show substring matches.",
     )
     return parser
 
