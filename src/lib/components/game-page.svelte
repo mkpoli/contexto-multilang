@@ -363,22 +363,24 @@
 	let hasStarted = $derived(history.length > 0);
 	let solved = $derived(history.some((entry) => entry.rank === 1));
 	let bestRank = $derived(history.length ? Math.min(...history.map((entry) => entry.rank)) : null);
-	let answerLength = $derived(puzzle ? [...puzzle.answer].length : 0);
+	let answerCharacters = $derived(puzzle ? [...puzzle.answer] : []);
+	let answerLength = $derived(answerCharacters.length);
 	let rankHintUsesRemaining = $derived(MAX_RANK_HINT_USES - rankHintUses);
 	let revealedClosestWords = $derived(solved && puzzle ? puzzle.closestWords.slice(0, 8) : []);
 	let canShowLengthHint = $derived(!showHint && !solved);
 	let canShowRankHint = $derived(!solved && rankHintUses < MAX_RANK_HINT_USES);
+	let nextCharacterToReveal = $derived.by(() => {
+		if (!(!solved && answerLength >= 2 && rankHintUses >= MAX_RANK_HINT_USES)) {
+			return -1;
+		}
+
+		const nextIndex = [...Array(answerLength - 1).keys()].find(
+			(i) => !revealedCharacterHints.includes(i + 1)
+		);
+		return nextIndex === undefined ? -1 : nextIndex + 1;
+	});
 	let canRevealCharacter = $derived(
-		!solved &&
-			answerLength >= 2 &&
-			rankHintUses >= MAX_RANK_HINT_USES &&
-			revealedCharacterHints.length < answerLength - 1
-	);
-	let nextCharacterToReveal = $derived(
-		canRevealCharacter
-			? ([...Array(answerLength - 1).keys()].find((i) => !revealedCharacterHints.includes(i + 1)) ??
-					-1) + 1
-			: -1
+		!solved && answerLength >= 2 && rankHintUses >= MAX_RANK_HINT_USES && nextCharacterToReveal >= 0
 	);
 
 	function pickRankHint(): GuessProfile | null {
@@ -675,8 +677,9 @@
 
 	function revealCharacterHint() {
 		if (!puzzle || solved || nextCharacterToReveal < 0) return;
+		const char = answerCharacters[nextCharacterToReveal];
+		if (!char) return;
 		revealedCharacterHints = [...revealedCharacterHints, nextCharacterToReveal];
-		const char = puzzle.answer[nextCharacterToReveal];
 		feedback = format(gameCopy.characterHintFeedback, { n: nextCharacterToReveal + 1, char });
 		feedbackTone = 'neutral';
 	}
