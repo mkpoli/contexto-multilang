@@ -137,7 +137,8 @@
 			lookupFailedFeedback: '查詢相似度時出了點問題，請再試一次。',
 			knownWordUnmatchedFeedback:
 				'「{word}」在資料庫裡，但目前還無法完成字詞匹配，請換一個近義詞再試。',
-			unknownWordFeedback: '我們目前不知道「{word}」的相似度，請換一個資料庫裡已有的詞。',
+			unknownWordFeedback:
+				'「{word}」目前不在可查詢的詞表中，這可能是因為太常見、太少見，或尚未收錄。請改試較具體的詞。',
 			hintSolvedFeedback: '接近提示已自動加入，而且直接猜中了「{answer}」。',
 			hintAppliedFeedback: '接近提示已自動加入「{word}」，目前排名第 {rank}。',
 			solvedFeedback: '答對了，隱藏詞就是「{answer}」。{note}',
