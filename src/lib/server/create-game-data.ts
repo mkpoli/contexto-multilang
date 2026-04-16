@@ -236,22 +236,24 @@ export const createGameData = ({
 			const canonicalRow = bundle.data.vocab[guessId];
 			const canonicalWord = canonicalRow.word;
 			const shownWord = displayWord(canonicalRow);
-			const variantNote = canonicalWord === word ? undefined : `Matched variant as "${shownWord}".`;
+			const guessedWord = canonicalWord === word ? shownWord : word;
 
 			if (guessId === bundle.answerId) {
 				return {
-					word: shownWord,
+					word: guessedWord,
+					key: canonicalWord,
 					rank: 1,
 					similarity: 100,
-					note: variantNote ?? 'Solved'
+					note: undefined
 				};
 			}
 
 			return {
-				word: shownWord,
+				word: guessedWord,
+				key: canonicalWord,
 				rank: bundle.cache.ranks[guessId],
 				similarity: toPercent(fromScoreBasisPoints(bundle.cache.scores[guessId])),
-				note: variantNote
+				note: undefined
 			};
 		},
 

@@ -2,6 +2,7 @@ export type GameId = 'zh' | 'ja' | 'ain';
 
 export type GuessProfile = {
 	word: string;
+	key?: string;
 	rank: number;
 	similarity: number;
 	note?: string;

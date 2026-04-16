@@ -75,6 +75,7 @@
 		hintAppliedFeedback: string;
 		solvedFeedback: string;
 		closeGuessFeedback: string;
+		rankedGuessFeedback: string;
 		lengthHintFeedback: string;
 		proximityExhaustedFeedback: string;
 		noMoreProximityFeedback: string;
@@ -141,6 +142,7 @@
 			hintAppliedFeedback: '接近提示已自動加入「{word}」，目前排名第 {rank}。',
 			solvedFeedback: '答對了，隱藏詞就是「{answer}」。{note}',
 			closeGuessFeedback: '「{word}」很接近，目前排名第 {rank}。{note}',
+			rankedGuessFeedback: '「{word}」目前排名第 {rank}。{note}',
 			lengthHintFeedback: '提示：答案共有 {count} 個字。',
 			proximityExhaustedFeedback: '接近提示已用完，最多只能使用 3 次。',
 			noMoreProximityFeedback: '目前沒有更合適的接近提示了。',
@@ -201,6 +203,7 @@
 			hintAppliedFeedback: '近さヒントとして「{word}」を自動追加しました。現在 {rank} 位です。',
 			solvedFeedback: '正解です。隠し語は「{answer}」です。{note}',
 			closeGuessFeedback: '「{word}」はかなり近く、現在 {rank} 位です。{note}',
+			rankedGuessFeedback: '「{word}」の現在順位は {rank} 位です。{note}',
 			lengthHintFeedback: 'ヒント：答えは {count} 文字です。',
 			proximityExhaustedFeedback: '近さヒントは使い切りました。最大 3 回までです。',
 			noMoreProximityFeedback: 'これ以上ちょうどよい近さヒントはありません。',
@@ -262,6 +265,7 @@
 			hintAppliedFeedback: 'The proximity hint auto-submitted "{word}", now ranked #{rank}.',
 			solvedFeedback: 'Solved. The hidden word is "{answer}". {note}',
 			closeGuessFeedback: '"{word}" is close, currently ranked #{rank}. {note}',
+			rankedGuessFeedback: '"{word}" is currently ranked #{rank}. {note}',
 			lengthHintFeedback: 'Hint: the answer is {count} characters long.',
 			proximityExhaustedFeedback: 'No proximity hints remaining. Maximum: 3.',
 			noMoreProximityFeedback: 'No better proximity hint is available right now.',
@@ -294,6 +298,8 @@
 
 	const loggedSimilarityPercent = (rank: number) =>
 		`${Math.round(Number(loggedSimilarity(rank)) * 100)}%`;
+
+	const isCloseGuess = (rank: number) => rank <= 250;
 
 	type CharacterHint = {
 		char: string;
@@ -433,11 +439,14 @@
 		feedback =
 			match.rank === 1
 				? format(gameCopy.solvedFeedback, { answer: puzzle?.answer ?? '', note: match.note ?? '' })
-				: format(gameCopy.closeGuessFeedback, {
-						word: match.word,
-						rank: match.rank,
-						note: match.note ?? ''
-					});
+				: format(
+						isCloseGuess(match.rank) ? gameCopy.closeGuessFeedback : gameCopy.rankedGuessFeedback,
+						{
+							word: match.word,
+							rank: match.rank,
+							note: match.note ?? ''
+						}
+					);
 		feedbackTone = match.rank === 1 ? 'success' : 'neutral';
 	}
 
@@ -609,10 +618,11 @@
 			return;
 		}
 
-		const canonicalExisting = history.find((entry) => entry.word === match.word);
+		const matchKey = match.key ?? match.word;
+		const canonicalExisting = history.find((entry) => (entry.key ?? entry.word) === matchKey);
 		if (canonicalExisting) {
 			feedback = format(gameCopy.duplicateGuessFeedback, {
-				word: match.word,
+				word,
 				rank: canonicalExisting.rank
 			});
 			feedbackTone = 'warning';
