@@ -58,6 +58,14 @@ Outputs in build mode:
 - `metadata.json`
 - `embeddings.f32.*.bin`
 
+Inspect built artifacts with `tools/game-vocab-tools`:
+
+```sh
+cd ../game-vocab-tools
+uv run game-vocab-stats --game zh --rank-samples 100,300,1000,3000,5000,10000,20000
+uv run game-vocab-neighbors --game zh 数学 哲学
+```
+
 Notes:
 
 - the progress bar is based on compressed bytes read, so it stays bounded during concurrent counting

@@ -1,0 +1,16 @@
+[project]
+name = "game-vocab-tools"
+version = "0.1.0"
+description = "Inspection utilities for generated game vocab artifacts"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "numpy>=2.2,<3",
+]
+
+[project.scripts]
+game-vocab-stats = "game_vocab_tools.inspect_stats:main"
+game-vocab-neighbors = "game_vocab_tools.inspect_neighbors:main"
+
+[tool.uv]
+package = true
