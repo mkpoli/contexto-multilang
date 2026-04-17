@@ -436,9 +436,9 @@
 		}
 
 		const nextIndex = [...Array(answerLength - 1).keys()].find(
-			(i) => !revealedCharacterHints.includes(i + 1)
+			(i) => !revealedCharacterHints.includes(i)
 		);
-		return nextIndex === undefined ? -1 : nextIndex + 1;
+		return nextIndex ?? -1;
 	});
 	let canRevealCharacter = $derived(
 		!solved && answerLength >= 2 && rankHintUses >= MAX_RANK_HINT_USES && nextCharacterToReveal >= 0
