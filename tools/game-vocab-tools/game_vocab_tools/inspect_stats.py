@@ -19,7 +19,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--game",
-        choices=["zh", "ja"],
+        choices=["zh", "ja", "ko"],
         default="zh",
         help="Which generated game index to inspect.",
     )

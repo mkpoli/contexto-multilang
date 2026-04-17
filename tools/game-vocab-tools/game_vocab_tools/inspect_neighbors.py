@@ -21,6 +21,7 @@ def build_parser() -> argparse.ArgumentParser:
             "Examples:\n"
             "  game-vocab-neighbors --game zh 季節 歌曲\n"
             "  game-vocab-neighbors --game ja --contains 季節 音楽\n"
+            "  game-vocab-neighbors --game ko 한국 역사\n"
             "  game-vocab-neighbors --input-dir src/lib/generated/zh-game 春天"
         ),
         formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -34,7 +35,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--game",
-        choices=["zh", "ja"],
+        choices=["zh", "ja", "ko"],
         default="zh",
         help="Built game index to inspect (default: %(default)s).",
     )
