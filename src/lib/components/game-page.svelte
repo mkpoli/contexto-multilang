@@ -3,7 +3,7 @@
 
 	import type { GamePuzzle, GuessLookupResponse, GuessProfile } from '$lib/game/types';
 
-	type PageGame = 'zh' | 'ja' | 'ain';
+	type PageGame = 'zh' | 'ja' | 'ko' | 'ain';
 
 	type GuessResult = GuessProfile & {
 		order: number;
@@ -210,6 +210,67 @@
 			noMoreProximityFeedback: 'これ以上ちょうどよい近さヒントはありません。',
 			characterHintFeedback: '文字ヒント：{n} 文字目は「{char}」です。',
 			proximityHintNote: '近さヒント {used}/{max}'
+		},
+		ko: {
+			pageTitle: 'Contexto Multilang - 한국어 프로토타입',
+			metaDescription:
+				'한국어 위키백과 말뭉치 기반 Contexto 스타일 프로토타입입니다. 의미로 단어를 추측하고 순위를 확인할 수 있습니다.',
+			eyebrow: 'Contexto Multilang / Korean Prototype',
+			datasetName: '한국어 Wikipedia 30k 프로토타입',
+			freshTitle: '철자가 아니라 의미로 숨은 단어를 맞히세요.',
+			startedTitle: '의미 공간을 더 좁혀 보세요.',
+			intro:
+				'고빈도 한국어 어휘에서 정답이 무작위로 선택됩니다. 추측할 때마다 의미 순위가 반환되며 숫자가 작을수록 더 가깝습니다.',
+			compactIntro:
+				'추측 기록은 가까운 순서대로 정렬되어 있습니다. 가장 높은 후보부터 밀어 보세요.',
+			progressLabel: '진행 상황',
+			currentBuildLabel: '현재 데이터셋',
+			categoryLabel: '범주',
+			bestRankLabel: '현재 최고 순위',
+			difficultyLabel: '난이도 힌트',
+			difficultyValue: '정답은 고빈도 단어 풀에서 출제됩니다',
+			startGuessingLabel: '추측 시작',
+			lengthHintLabel: '길이 힌트',
+			proximityHintLabel: '근접 힌트',
+			characterHintButton: '{n}번째 글자 힌트',
+			newPuzzleLabel: '새 문제',
+			submitGuessLabel: '추측 제출',
+			placeholder: '예: 역사, 영화, 서울',
+			hintLabel: '힌트',
+			answerLengthLabel: '정답 길이',
+			guessesLabel: '추측 횟수',
+			statusLabel: '상태',
+			solvedLabel: '정답',
+			inProgressLabel: '진행 중',
+			hiddenWordLabel: '숨은 단어',
+			closestWordsLabel: '가장 가까운 단어',
+			showLabel: '보기',
+			hideLabel: '닫기',
+			guessHistoryLabel: '추측 기록',
+			entriesSuffix: '개',
+			latestGuessLabel: '최근 추측',
+			emptyStateTitle: '아직 추측이 없습니다.',
+			emptyStateBody: '먼저 "역사"나 "영화"처럼 익숙한 단어를 넣어 보세요.',
+			defaultFeedback: '한국어 단어를 입력해서 숨은 정답과 얼마나 가까운지 확인해 보세요.',
+			newPuzzleFeedback: '새 한국어 퍼즐이 준비되었습니다.',
+			loadFailedFeedback: '퍼즐 데이터를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.',
+			loadingFeedback: '퍼즐을 불러오는 중입니다.',
+			emptyGuessFeedback: '먼저 한국어 단어를 입력해 주세요.',
+			duplicateGuessFeedback: '"{word}"는 이미 추측했습니다. 현재 순위는 {rank}위입니다.',
+			lookupFailedFeedback: '유사도 조회 중 문제가 발생했습니다. 다시 시도해 주세요.',
+			knownWordUnmatchedFeedback:
+				'"{word}"는 데이터셋에 있지만 깔끔하게 매칭되지 않았습니다. 비슷한 다른 단어를 시도해 보세요.',
+			unknownWordFeedback: '"{word}"는 현재 데이터셋에 없습니다. 다른 단어를 시도해 보세요.',
+			hintSolvedFeedback: '근접 힌트가 자동 입력되어 그대로 "{answer}"를 맞혔습니다.',
+			hintAppliedFeedback: '근접 힌트로 "{word}"를 자동 입력했습니다. 현재 {rank}위입니다.',
+			solvedFeedback: '정답입니다. 숨은 단어는 "{answer}"입니다. {note}',
+			closeGuessFeedback: '"{word}"는 꽤 가깝고 현재 {rank}위입니다. {note}',
+			rankedGuessFeedback: '"{word}"의 현재 순위는 {rank}위입니다. {note}',
+			lengthHintFeedback: '힌트: 정답은 {count}글자입니다.',
+			proximityExhaustedFeedback: '근접 힌트는 모두 사용했습니다. 최대 3회입니다.',
+			noMoreProximityFeedback: '지금은 더 적절한 근접 힌트가 없습니다.',
+			characterHintFeedback: '글자 힌트: {n}번째 글자는 "{char}"입니다.',
+			proximityHintNote: '근접 힌트 {used}/{max}'
 		},
 		ain: {
 			pageTitle: 'Contexto Multilang - Ainu Prototype',
@@ -702,6 +763,7 @@
 					<div class="switcher" aria-label="Game selector">
 						<a class:active={game === 'zh'} href="/zh">ZH</a>
 						<a class:active={game === 'ja'} href="/ja">JA</a>
+						<a class:active={game === 'ko'} href="/ko">KO</a>
 						<a class:active={game === 'ain'} href="/ain">AIN</a>
 					</div>
 				</div>

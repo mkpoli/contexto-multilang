@@ -1,6 +1,6 @@
 import { deLocalizeUrl } from '$lib/paraglide/runtime';
 
-const GAME_ROUTE_PREFIXES = ['/zh', '/ja', '/ain'];
+const GAME_ROUTE_PREFIXES = ['/zh', '/ja', '/ko', '/ain'];
 
 export const reroute = (request) => {
 	const url = new URL(request.url);

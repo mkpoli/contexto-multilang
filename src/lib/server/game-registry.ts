@@ -2,11 +2,13 @@ import type { GameId } from '$lib/game/types';
 
 import * as ainGameData from '$lib/server/ain-game-data';
 import * as jaGameData from '$lib/server/ja-game-data';
+import * as koGameData from '$lib/server/ko-game-data';
 import * as zhGameData from '$lib/server/zh-game-data';
 
 const gameModules = {
 	zh: zhGameData,
 	ja: jaGameData,
+	ko: koGameData,
 	ain: ainGameData
 } as const;
 
