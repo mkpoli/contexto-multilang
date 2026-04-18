@@ -432,6 +432,42 @@ input {
 	font-size: 0.95rem;
 }
 
+.hint-characters {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(44px, 1fr));
+	gap: 10px;
+	margin-top: 14px;
+}
+
+.hint-character {
+	display: grid;
+	justify-items: center;
+	gap: 6px;
+	padding: 10px 8px;
+	border-radius: 14px;
+	background: rgba(255, 255, 255, 0.04);
+	border: 1px solid rgba(255, 255, 255, 0.06);
+	color: var(--text-soft);
+}
+
+.hint-character.revealed {
+	background: linear-gradient(135deg, rgba(255, 194, 102, 0.18), rgba(255, 137, 72, 0.1));
+	border-color: rgba(255, 184, 94, 0.34);
+	color: var(--text-main);
+}
+
+.hint-character-index {
+	font-size: 0.72rem;
+	line-height: 1;
+	opacity: 0.72;
+}
+
+.hint-character strong {
+	font-size: 1.15rem;
+	line-height: 1;
+	font-weight: 700;
+}
+
 .rank-hint-panel {
 	background: linear-gradient(135deg, rgba(84, 176, 255, 0.14), rgba(255, 255, 255, 0.04));
 	border-color: rgba(122, 188, 255, 0.28);
