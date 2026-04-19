@@ -22,6 +22,23 @@ Build game artifacts on the full corpus:
 uv run ain-build-game-index
 ```
 
+Build production-ready `ain-game` data from the repo root:
+
+```sh
+uv run --directory tools/ain-vocab-pipeline ain-build-game-index \
+  data/ain/ainu-corpora/data.jsonl \
+  src/lib/generated/ain-game \
+  --stopwords-dir data/ain/stopwords \
+  --min-count 3 \
+  --max-doc-ratio 0.4 \
+  --max-vocab 12000 \
+  --window-size 4 \
+  --embedding-dim 128 \
+  --svd-iter 7
+```
+
+This command rebuilds the production `ain-game` artifacts in place for the app.
+
 Build on a smaller sample:
 
 ```sh
@@ -52,4 +69,5 @@ Notes:
 
 - if `../../data/ain/stopwords` does not exist, the builder continues with no stopwords
 - aliases include the original surface form plus a diacritic-stripped form when different
-- the frontend lookup now also normalizes Ainu underscores, so `hine` and `h_ine` are treated the same at runtime
+- underscores are removed during Ainu pipeline processing, so `hine` and `h_ine` are merged during build
+- the frontend lookup also normalizes Ainu underscores, so runtime lookup matches the built data
