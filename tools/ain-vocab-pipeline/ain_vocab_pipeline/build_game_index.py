@@ -107,7 +107,7 @@ def load_stopwords(stopwords_dir: Path) -> set[str]:
             for line in source:
                 word = line.strip()
                 if word:
-                    stopwords.add(word)
+                    stopwords.add(normalize_ainu_form(word))
     return stopwords
 
 
@@ -190,29 +190,42 @@ def split_sentence_words(input_text: str) -> list[str]:
     ]
 
 
+def normalize_ainu_form(word: str) -> str:
+    return word.lower().replace("_", "")
+
+
 def tokenize(input_text: str) -> list[str]:
     words = split_sentence_words(input_text)
     words = [piece for word in words for piece in split_affixing_apostrophes(word)]
     words = [piece for word in words for piece in split_affixes(word)]
-    return [word.lower() for word in words if word and is_word(word)]
+    normalized_words = [normalize_ainu_form(word) for word in words if word]
+    return [word for word in normalized_words if word and is_word(word)]
 
 
 def token_alias_groups(input_text: str) -> list[tuple[str, list[str]]]:
     groups: list[tuple[str, list[str]]] = []
     for raw_word in split_sentence_words(input_text):
         lowered = raw_word.lower()
+        normalized_lowered = normalize_ainu_form(lowered)
         parts = [
             piece
             for word in split_affixing_apostrophes(lowered)
             for piece in split_affixes(word)
         ]
+        parts = [normalize_ainu_form(part) for part in parts if part]
         parts = [part for part in parts if part and is_word(part)]
         if not parts:
             continue
         groups.append((lowered, parts))
-        stripped = strip_diacritics(lowered)
-        if stripped != lowered:
-            groups.append((stripped, parts))
+        if normalized_lowered != lowered:
+            groups.append((normalized_lowered, parts))
+        stripped_aliases = {
+            strip_diacritics(lowered),
+            strip_diacritics(normalized_lowered),
+        }
+        for stripped in stripped_aliases:
+            if stripped and stripped != lowered and stripped != normalized_lowered:
+                groups.append((stripped, parts))
     return groups
 
 
