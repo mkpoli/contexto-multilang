@@ -2,7 +2,7 @@
 	"$schema": "https://inlang.com/schema/inlang-message-format",
 	"game_page_title": "Contexto Multilang - 한국어 프로토타입",
 	"game_meta_description": "한국어 위키백과 말뭉치 기반 Contexto 스타일 프로토타입입니다. 의미로 단어를 추측하고 순위를 확인할 수 있습니다.",
-	"game_eyebrow": "Contexto Multilang / Korean Prototype",
+	"game_eyebrow": "Contexto Multilang",
 	"game_dataset_name": "한국어 Wikipedia 30k 프로토타입",
 	"game_fresh_title": "철자가 아니라 의미로 숨은 단어를 맞히세요.",
 	"game_started_title": "의미 공간을 더 좁혀 보세요.",

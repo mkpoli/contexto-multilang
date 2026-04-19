@@ -1,9 +1,8 @@
 {
 	"$schema": "https://inlang.com/schema/inlang-message-format",
-	"hello_world": "Hello, {name} from en!",
-	"game_page_title": "Contexto Multilang - Ainu Prototype",
+	"game_page_title": "Contexto Multilang",
 	"game_meta_description": "A Contexto-style prototype built from an Ainu JSONL corpus with a simple word tokenizer.",
-	"game_eyebrow": "Contexto Multilang / Ainu Prototype",
+	"game_eyebrow": "Contexto Multilang",
 	"game_dataset_name": "Ainu corpus prototype",
 	"game_fresh_title": "Guess the hidden Ainu word by meaning.",
 	"game_started_title": "Keep narrowing the semantic space.",

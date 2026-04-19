@@ -1,6 +1,6 @@
 {
 	"$schema": "https://inlang.com/schema/inlang-message-format",
-	"game_page_title": "Contexto Multilang - Ainu Prototype",
+	"game_page_title": "Contexto Usa Okay Itak - Ainuitak Urekrek",
 	"game_meta_description": "A Contexto-style prototype built from an Ainu JSONL corpus with a simple word tokenizer.",
 	"game_eyebrow": "Contexto Multilang / Ainu Prototype",
 	"game_dataset_name": "Ainu corpus prototype",
