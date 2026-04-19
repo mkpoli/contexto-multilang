@@ -25,7 +25,7 @@ uv run ain-build-game-index
 Build production-ready `ain-game` data from the repo root:
 
 ```sh
-uv run --directory tools/ain-vocab-pipeline ain-build-game-index \
+uv run --directory tools/ain-vocab-pipeline python -m ain_vocab_pipeline.build_game_index \
   data/ain/ainu-corpora/data.jsonl \
   src/lib/generated/ain-game \
   --stopwords-dir data/ain/stopwords \
@@ -38,11 +38,13 @@ uv run --directory tools/ain-vocab-pipeline ain-build-game-index \
 ```
 
 This command rebuilds the production `ain-game` artifacts in place for the app.
+Relative paths in this form are resolved correctly even when using `uv run --directory`.
+The `python -m` form is the most reliable invocation path for this tool.
 
 Build on a smaller sample:
 
 ```sh
-uv run ain-build-game-index \
+uv run python -m ain_vocab_pipeline.build_game_index \
   ../../data/ain/ainu-corpora/data.jsonl \
   ../../src/lib/generated/ain-game-test \
   --limit-pages 2000 \
