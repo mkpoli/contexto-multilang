@@ -15,8 +15,6 @@
 		version?: number;
 		puzzle: GamePuzzle;
 		guessCount: number;
-		feedback: string;
-		feedbackTone: FeedbackTone;
 		history: GuessResult[];
 		latestGuess: GuessResult | null;
 		showClosestWords: boolean;
@@ -238,14 +236,10 @@
 				: (session.revealedCharacterHints ?? []).filter(
 						(index) => Number.isInteger(index) && index >= 0 && index <= maxRevealIndex
 					);
-			const hasLegacyCharacterHintFeedback = /第 0 個字|0 文字目|character 0|0번째 글자/.test(
-				session.feedback ?? ''
-			);
-
 			puzzle = session.puzzle;
 			guessCount = session.guessCount;
-			feedback = hasLegacyCharacterHintFeedback ? gameCopy.defaultFeedback : session.feedback;
-			feedbackTone = session.feedbackTone;
+			feedback = gameCopy.defaultFeedback;
+			feedbackTone = 'neutral';
 			history = sortHistory(session.history);
 			latestGuess = session.latestGuess;
 			showClosestWords = session.showClosestWords;
@@ -267,8 +261,6 @@
 			version: SESSION_VERSION,
 			puzzle,
 			guessCount,
-			feedback,
-			feedbackTone,
 			history,
 			latestGuess,
 			showClosestWords,
