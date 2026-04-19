@@ -24,7 +24,7 @@ type LoadedGameData = {
 	metadata: Metadata;
 	vocab: VocabRow[];
 	wordToId: Map<string, number>;
-	variantToIds: Map<string, number[]>;
+	lookupToIds: Map<string, number[]>;
 	embeddings: Float32Array;
 	playableIds: number[];
 };
@@ -44,6 +44,7 @@ type CreateGameDataOptions = {
 	classifyRow: (row: VocabRow) => string;
 	buildIntro: (row: VocabRow) => string;
 	displayWord?: (row: VocabRow) => string;
+	normalizeLookupWord?: (word: string) => string;
 };
 
 const MAX_CACHED_ANSWERS = 24;
@@ -62,10 +63,26 @@ export const createGameData = ({
 	embedKeyPrefix,
 	classifyRow,
 	buildIntro,
-	displayWord = (row) => row.display_word ?? row.word
+	displayWord = (row) => row.display_word ?? row.word,
+	normalizeLookupWord = (word) => word
 }: CreateGameDataOptions) => {
 	const answerCache = new Map<number, AnswerCache>();
 	let dataPromise: Promise<LoadedGameData> | null = null;
+
+	const appendLookupIds = (lookupToIds: Map<string, number[]>, word: string, ids: number[]) => {
+		const normalizedWord = normalizeLookupWord(word);
+		const existingIds = lookupToIds.get(normalizedWord);
+		if (!existingIds) {
+			lookupToIds.set(normalizedWord, [...ids]);
+			return;
+		}
+
+		for (const id of ids) {
+			if (!existingIds.includes(id)) {
+				existingIds.push(id);
+			}
+		}
+	};
 
 	const loadGameData = async (): Promise<LoadedGameData> => {
 		if (!dataPromise) {
@@ -80,7 +97,13 @@ export const createGameData = ({
 				const vocab = JSON.parse(vocabText) as VocabRow[];
 				const variantRows = JSON.parse(variantsText) as Record<string, number[]>;
 				const wordToId = new Map(vocab.map((entry, index) => [entry.word, index]));
-				const variantToIds = new Map(Object.entries(variantRows));
+				const lookupToIds = new Map<string, number[]>();
+				for (const [word, ids] of Object.entries(variantRows)) {
+					appendLookupIds(lookupToIds, word, ids);
+				}
+				for (const [index, entry] of vocab.entries()) {
+					appendLookupIds(lookupToIds, entry.word, [index]);
+				}
 
 				const chunkCount = metadata.embed_chunks ?? 1;
 				const chunkUrls = Array.from({ length: chunkCount }, (_, i) => {
@@ -105,7 +128,7 @@ export const createGameData = ({
 					metadata,
 					vocab,
 					wordToId,
-					variantToIds,
+					lookupToIds,
 					embeddings,
 					playableIds: metadata.playable_ids
 				};
@@ -183,7 +206,7 @@ export const createGameData = ({
 	};
 
 	const resolveGuessIds = (data: LoadedGameData, word: string): number[] => {
-		const variantIds = data.variantToIds.get(word);
+		const variantIds = data.lookupToIds.get(normalizeLookupWord(word));
 		if (variantIds && variantIds.length > 0) {
 			return variantIds;
 		}
@@ -259,7 +282,7 @@ export const createGameData = ({
 
 		hasKnownWord: async (word: string): Promise<boolean> => {
 			const data = await loadGameData();
-			return data.variantToIds.has(word) || data.wordToId.has(word);
+			return data.lookupToIds.has(normalizeLookupWord(word)) || data.wordToId.has(word);
 		}
 	};
 };

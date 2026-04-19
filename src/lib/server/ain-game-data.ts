@@ -16,6 +16,7 @@ export const { getRandomPuzzle, hasKnownWord, lookupGuess } = createGameData({
 	variantsAssetUrl,
 	embedChunkGlob,
 	embedKeyPrefix: '../generated/ain-game',
+	normalizeLookupWord: (word) => word.replaceAll('_', ''),
 	classifyRow: (row) => {
 		if (row.doc_frequency >= 100) return 'Common Ainu word';
 		if (row.doc_frequency >= 20) return 'Documented Ainu word';
