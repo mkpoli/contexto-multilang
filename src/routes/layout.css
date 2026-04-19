@@ -68,7 +68,7 @@ input {
 .hero-card {
 	padding: 32px;
 	display: grid;
-	grid-template-columns: minmax(0, 1.6fr) minmax(280px, 0.9fr);
+	grid-template-columns: minmax(0, 1fr);
 	gap: 24px;
 	align-items: end;
 	position: relative;
@@ -221,7 +221,6 @@ input {
 }
 
 .lede,
-.status-panel p,
 .feedback,
 .guess-message,
 .empty-state p {
@@ -245,22 +244,8 @@ input {
 	font-size: 0.95rem;
 }
 
-.status-panel {
-	display: grid;
-	gap: 16px;
-	padding: 22px;
-	border-radius: 22px;
-	background: var(--bg-soft);
-	border: 1px solid rgba(255, 255, 255, 0.08);
-	align-self: stretch;
-	transition:
-		padding 0.28s ease,
-		gap 0.28s ease;
-}
-
 .hero-card.compact {
 	padding: 20px 24px;
-	grid-template-columns: minmax(0, 1.35fr) minmax(300px, 0.85fr);
 	gap: 18px;
 	border-radius: 22px;
 }
@@ -280,12 +265,6 @@ input {
 	margin-top: 10px;
 }
 
-.hero-card.compact .status-panel {
-	padding: 16px 18px;
-	gap: 12px;
-}
-
-.status-panel strong,
 .mini-stats strong,
 .answer-banner strong {
 	font-size: 1.15rem;

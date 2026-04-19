@@ -493,27 +493,6 @@
 				<p class="lede compact-lede">{gameCopy.compactIntro}</p>
 			{/if}
 		</div>
-
-		<div class="status-panel">
-			<div>
-				<span class="label">{hasStarted ? gameCopy.progressLabel : gameCopy.currentBuildLabel}</span
-				>
-				<strong
-					>{hasStarted
-						? `${history.length} ${gameCopy.entriesSuffix}`
-						: gameCopy.datasetName}</strong
-				>
-				<p>{hasStarted || !puzzle ? feedback : puzzle.intro}</p>
-			</div>
-			<div>
-				<span class="label">{gameCopy.categoryLabel}</span>
-				<strong>{puzzle?.category ?? '...'}</strong>
-			</div>
-			<div>
-				<span class="label">{hasStarted ? gameCopy.bestRankLabel : gameCopy.difficultyLabel}</span>
-				<strong>{hasStarted ? `${bestRank ?? '—'}` : gameCopy.difficultyValue}</strong>
-			</div>
-		</div>
 	</section>
 
 	<section class="play-grid">
