@@ -17,3 +17,6 @@ ain-build-game-index = "ain_vocab_pipeline.build_game_index:main"
 
 [tool.uv]
 package = true
+
+[tool.setuptools.packages.find]
+include = ["ain_vocab_pipeline*"]

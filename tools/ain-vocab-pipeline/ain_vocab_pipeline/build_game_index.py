@@ -15,6 +15,8 @@ from alive_progress import alive_bar
 from scipy import sparse
 from sklearn.decomposition import TruncatedSVD
 
+REPO_ROOT = Path(__file__).resolve().parents[3]
+
 TOKEN_PATTERN = regex.compile(r"\s+|([\p{L}=]+)|(\p{P})", regex.UNICODE)
 WORD_PATTERN = regex.compile(r"^[\p{L}=]+$", regex.UNICODE)
 AINU_WORD_PATTERN = regex.compile(r"^[a-zA-Zâîûêôáíúéó=\-_'’\[\]]+$")
@@ -98,6 +100,35 @@ def normalize_embeddings(embeddings: np.ndarray) -> np.ndarray:
     norms = np.linalg.norm(embeddings, axis=1, keepdims=True)
     norms[norms == 0] = 1.0
     return embeddings / norms
+
+
+def resolve_existing_path(path_str: str) -> Path:
+    path = Path(path_str)
+    if path.is_absolute():
+        return path
+
+    cwd_candidate = (Path.cwd() / path).resolve()
+    if cwd_candidate.exists():
+        return cwd_candidate
+
+    repo_candidate = (REPO_ROOT / path).resolve()
+    if repo_candidate.exists():
+        return repo_candidate
+
+    return cwd_candidate
+
+
+def resolve_output_path(path_str: str) -> Path:
+    path = Path(path_str)
+    if path.is_absolute():
+        return path
+
+    cwd_candidate = (Path.cwd() / path).resolve()
+    repo_candidate = (REPO_ROOT / path).resolve()
+
+    if repo_candidate.exists() or repo_candidate.parent.exists():
+        return repo_candidate
+    return cwd_candidate
 
 
 def load_stopwords(stopwords_dir: Path) -> set[str]:
@@ -418,9 +449,9 @@ def main() -> None:
     total_start = time.perf_counter()
     timings: dict[str, float] = {}
     args = build_parser().parse_args()
-    input_path = Path(args.input_path).resolve()
-    output_dir = Path(args.output_dir).resolve()
-    stopwords_dir = Path(args.stopwords_dir).resolve()
+    input_path = resolve_existing_path(args.input_path)
+    output_dir = resolve_output_path(args.output_dir)
+    stopwords_dir = resolve_existing_path(args.stopwords_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
 
     with timed_step("load stopwords", timings):
