@@ -19,6 +19,7 @@
 	"game_proximity_hint_label": "근접 힌트",
 	"game_character_hint_button": "{n}번째 글자 힌트",
 	"game_new_puzzle_label": "새 문제",
+	"game_new_puzzle_confirm_prompt": "새 문제를 시작할까요? 현재 진행 상황은 사라집니다.",
 	"game_submit_guess_label": "추측 제출",
 	"game_placeholder": "예: 역사, 영화, 서울",
 	"game_hint_label": "힌트",

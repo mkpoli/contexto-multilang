@@ -103,8 +103,8 @@ input {
 	display: flex;
 	justify-content: space-between;
 	align-items: center;
-	gap: 12px;
-	margin-bottom: 12px;
+	gap: 20px;
+	margin-bottom: 18px;
 }
 
 .hero-topline .eyebrow {
@@ -113,10 +113,31 @@ input {
 
 .hero-controls {
 	display: flex;
+	flex-direction: column;
+	align-items: flex-end;
+	gap: 14px;
+	justify-content: flex-start;
+}
+
+.hero-meta-row {
+	display: flex;
 	align-items: center;
-	gap: 10px;
+	gap: 14px;
 	flex-wrap: wrap;
 	justify-content: flex-end;
+}
+
+.hero-action-button {
+	display: inline-flex;
+	align-items: center;
+	gap: 10px;
+	padding-inline: 16px 20px;
+}
+
+.hero-action-button svg {
+	width: 1rem;
+	height: 1rem;
+	flex: 0 0 auto;
 }
 
 .switcher {
@@ -665,6 +686,12 @@ input {
 	.hero-topline {
 		flex-direction: column;
 		align-items: flex-start;
+	}
+
+	.hero-controls,
+	.hero-meta-row {
+		width: 100%;
+		align-items: stretch;
 	}
 
 	.guess-form,

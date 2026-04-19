@@ -19,6 +19,7 @@
 	"game_proximity_hint_label": "接近提示",
 	"game_character_hint_button": "第 {n} 字提示",
 	"game_new_puzzle_label": "換一題",
+	"game_new_puzzle_confirm_prompt": "要開始新的一題嗎？目前這局的進度會清除。",
 	"game_submit_guess_label": "提交猜測",
 	"game_placeholder": "例如：季節、歌曲、北京",
 	"game_hint_label": "提示",

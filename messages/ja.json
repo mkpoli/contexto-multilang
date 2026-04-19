@@ -19,6 +19,7 @@
 	"game_proximity_hint_label": "近さヒント",
 	"game_character_hint_button": "{n}文字目ヒント",
 	"game_new_puzzle_label": "新しい問題",
+	"game_new_puzzle_confirm_prompt": "新しい問題を始めますか？現在の進行状況は失われます。",
 	"game_submit_guess_label": "推測する",
 	"game_placeholder": "例：季節、音楽、東京",
 	"game_hint_label": "ヒント",

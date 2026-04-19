@@ -19,6 +19,7 @@
 	"game_proximity_hint_label": "Proximity hint",
 	"game_character_hint_button": "Character {n} hint",
 	"game_new_puzzle_label": "New puzzle",
+	"game_new_puzzle_confirm_prompt": "Start a new puzzle? Your current progress will be lost.",
 	"game_submit_guess_label": "Submit guess",
 	"game_placeholder": "e.g. kamuy, aynu, mosir",
 	"game_hint_label": "Hint",

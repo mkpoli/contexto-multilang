@@ -18,6 +18,7 @@ export type GameCopy = {
 	proximityHintLabel: string;
 	characterHintButton: string;
 	newPuzzleLabel: string;
+	newPuzzleConfirmPrompt: string;
 	submitGuessLabel: string;
 	placeholder: string;
 	hintLabel: string;
@@ -87,6 +88,7 @@ export const getGameCopy = (game: GameId): GameCopy => {
 		proximityHintLabel: m.game_proximity_hint_label({}, { locale }),
 		characterHintButton: m.game_character_hint_button({ n: token('n') }, { locale }),
 		newPuzzleLabel: m.game_new_puzzle_label({}, { locale }),
+		newPuzzleConfirmPrompt: m.game_new_puzzle_confirm_prompt({}, { locale }),
 		submitGuessLabel: m.game_submit_guess_label({}, { locale }),
 		placeholder: m.game_placeholder({}, { locale }),
 		hintLabel: m.game_hint_label({}, { locale }),
