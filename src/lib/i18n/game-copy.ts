@@ -8,17 +8,11 @@ export type GameCopy = {
 	pageTitle: string;
 	metaDescription: string;
 	eyebrow: string;
-	datasetName: string;
 	freshTitle: string;
 	startedTitle: string;
 	intro: string;
 	compactIntro: string;
-	progressLabel: string;
-	currentBuildLabel: string;
-	categoryLabel: string;
 	bestRankLabel: string;
-	difficultyLabel: string;
-	difficultyValue: string;
 	startGuessingLabel: string;
 	lengthHintLabel: string;
 	proximityHintLabel: string;
@@ -83,17 +77,11 @@ export const getGameCopy = (game: GameId): GameCopy => {
 		pageTitle: m.game_page_title({}, { locale }),
 		metaDescription: m.game_meta_description({}, { locale }),
 		eyebrow: m.game_eyebrow({}, { locale }),
-		datasetName: m.game_dataset_name({}, { locale }),
 		freshTitle: m.game_fresh_title({}, { locale }),
 		startedTitle: m.game_started_title({}, { locale }),
 		intro: m.game_intro({}, { locale }),
 		compactIntro: m.game_compact_intro({}, { locale }),
-		progressLabel: m.game_progress_label({}, { locale }),
-		currentBuildLabel: m.game_current_build_label({}, { locale }),
-		categoryLabel: m.game_category_label({}, { locale }),
 		bestRankLabel: m.game_best_rank_label({}, { locale }),
-		difficultyLabel: m.game_difficulty_label({}, { locale }),
-		difficultyValue: m.game_difficulty_value({}, { locale }),
 		startGuessingLabel: m.game_start_guessing_label({}, { locale }),
 		lengthHintLabel: m.game_length_hint_label({}, { locale }),
 		proximityHintLabel: m.game_proximity_hint_label({}, { locale }),
