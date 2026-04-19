@@ -1,0 +1,19 @@
+[project]
+name = "ain-vocab-pipeline"
+version = "0.1.0"
+description = "Ainu corpus builder for game vocab artifacts"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "alive-progress>=3.2.0,<4",
+    "numpy>=2.2,<3",
+    "regex>=2025.11.3,<2026",
+    "scikit-learn>=1.6,<2",
+    "scipy>=1.15,<2",
+]
+
+[project.scripts]
+ain-build-game-index = "ain_vocab_pipeline.build_game_index:main"
+
+[tool.uv]
+package = true
