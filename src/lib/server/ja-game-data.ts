@@ -22,5 +22,5 @@ export const { getRandomPuzzle, hasKnownWord, lookupGuess } = createGameData({
 		return '日本語語彙';
 	},
 	buildIntro: (row) =>
-		`日本語版 Wikipedia コーパス由来。出現回数 ${row.count}、掲載記事数 ${row.doc_frequency}。`
+		`よく使われる日本語の単語です。出現度 ${row.count}、広がり ${row.doc_frequency}。`
 });

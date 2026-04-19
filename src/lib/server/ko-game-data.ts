@@ -22,5 +22,5 @@ export const { getRandomPuzzle, hasKnownWord, lookupGuess } = createGameData({
 		return '한국어 어휘';
 	},
 	buildIntro: (row) =>
-		`한국어 위키백과 말뭉치 기반. 출현 빈도 ${row.count}, 등장 문서 수 ${row.doc_frequency}.`
+		`자주 쓰이는 한국어 단어입니다. 사용도 ${row.count}, 범위 ${row.doc_frequency}.`
 });

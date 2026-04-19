@@ -1,9 +1,9 @@
 {
 	"$schema": "https://inlang.com/schema/inlang-message-format",
-	"game_page_title": "Contexto Multilang - 한국어 프로토타입",
-	"game_meta_description": "한국어 위키백과 말뭉치 기반 Contexto 스타일 프로토타입입니다. 의미로 단어를 추측하고 순위를 확인할 수 있습니다.",
+	"game_page_title": "Contexto Multilang - 한국어",
+	"game_meta_description": "한국어 Contexto입니다. 의미로 숨은 단어를 추측하고 순위를 보며 정답에 가까워지세요.",
 	"game_eyebrow": "Contexto Multilang",
-	"game_dataset_name": "한국어 Wikipedia 30k 프로토타입",
+	"game_dataset_name": "한국어 챌린지",
 	"game_fresh_title": "철자가 아니라 의미로 숨은 단어를 맞히세요.",
 	"game_started_title": "의미 공간을 더 좁혀 보세요.",
 	"game_intro": "고빈도 한국어 어휘에서 정답이 무작위로 선택됩니다. 추측할 때마다 의미 순위가 반환되며 숫자가 작을수록 더 가깝습니다.",

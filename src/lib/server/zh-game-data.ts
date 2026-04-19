@@ -21,6 +21,5 @@ export const { getRandomPuzzle, hasKnownWord, lookupGuess } = createGameData({
 		if (row.doc_frequency >= 200) return '常見詞';
 		return '中文詞彙';
 	},
-	buildIntro: (row) =>
-		`來自中文維基百科語料，詞頻 ${row.count}、出現在 ${row.doc_frequency} 篇條目中。`
+	buildIntro: (row) => `這是一個常見中文詞。常見度 ${row.count}、分布度 ${row.doc_frequency}。`
 });

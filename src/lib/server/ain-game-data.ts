@@ -22,5 +22,5 @@ export const { getRandomPuzzle, hasKnownWord, lookupGuess } = createGameData({
 		return 'Ainu word';
 	},
 	buildIntro: (row) =>
-		`From the Ainu JSONL corpus, frequency ${row.count}, appears in ${row.doc_frequency} records.`
+		`A commonly used Ainu word. Frequency ${row.count}, spread ${row.doc_frequency}.`
 });

@@ -1,9 +1,9 @@
 {
 	"$schema": "https://inlang.com/schema/inlang-message-format",
 	"game_page_title": "Contexto Multilang - 中文語義猜詞",
-	"game_meta_description": "一個以中文維基百科語料為基礎的 Contexto 原型：猜詞、查看語義排名，並透過顏色感知接近程度。",
-	"game_eyebrow": "Contexto Multilang / Chinese Prototype",
-	"game_dataset_name": "中文 Wikipedia 5k 原型",
+	"game_meta_description": "中文版 Contexto。用語義猜出隱藏詞，根據排名一步步逼近答案。",
+	"game_eyebrow": "Contexto Multilang / 中文",
+	"game_dataset_name": "中文挑戰",
 	"game_fresh_title": "猜隱藏詞，不猜拼寫，猜語義。",
 	"game_started_title": "繼續縮小語義範圍。",
 	"game_intro": "系統會從一組高頻中文詞裡隨機挑出一個答案。你每猜一次，都會得到一個語義排名，越靠前代表越接近。",

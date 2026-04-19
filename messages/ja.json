@@ -1,9 +1,9 @@
 {
 	"$schema": "https://inlang.com/schema/inlang-message-format",
-	"game_page_title": "Contexto Multilang - 日本語プロトタイプ",
-	"game_meta_description": "日本語版 Wikipedia コーパスを使った Contexto 風プロトタイプ。Vibrato で分かち書きし、正確な順位を返します。",
+	"game_page_title": "Contexto Multilang - 日本語",
+	"game_meta_description": "日本語版 Contexto。意味で隠し語を当て、順位を手がかりに答えへ近づきます。",
 	"game_eyebrow": "Contexto Multilang",
-	"game_dataset_name": "日本語 Wikipedia 5k プロトタイプ",
+	"game_dataset_name": "日本語チャレンジ",
 	"game_fresh_title": "つづりではなく、意味で隠し語を当てる。",
 	"game_started_title": "意味の距離をさらに絞り込みましょう。",
 	"game_intro": "高頻度の日本語語彙からランダムに答えが選ばれます。推測するたびに意味的な順位が返り、数字が小さいほど近いです。",
