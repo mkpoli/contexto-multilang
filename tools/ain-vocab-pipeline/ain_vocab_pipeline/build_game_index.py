@@ -20,6 +20,7 @@ REPO_ROOT = Path(__file__).resolve().parents[3]
 TOKEN_PATTERN = regex.compile(r"\s+|([\p{L}=]+)|(\p{P})", regex.UNICODE)
 WORD_PATTERN = regex.compile(r"^[\p{L}=]+$", regex.UNICODE)
 AINU_WORD_PATTERN = regex.compile(r"^[a-zA-Zâîûêôáíúéó=\-_'’\[\]]+$")
+BOUNDARY_APOSTROPHES = "'’‘"
 APOSTROPHE_SPLIT_PATTERN = regex.compile(r"^(['’‘])?([^'’‘]*)(['’‘])?$")
 PREFIXES = ["ku", "k", "en", "in", "ci", "c", "un", "a", "i", "an", "e", "eci", "ec"]
 SUFFIXES = ["an", "as"]
@@ -222,7 +223,7 @@ def split_sentence_words(input_text: str) -> list[str]:
 
 
 def normalize_ainu_form(word: str) -> str:
-    return word.lower().replace("_", "")
+    return word.lower().replace("_", "").strip(BOUNDARY_APOSTROPHES)
 
 
 def tokenize(input_text: str) -> list[str]:
