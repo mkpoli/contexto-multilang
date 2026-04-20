@@ -352,6 +352,10 @@ input {
 	margin-bottom: 14px;
 }
 
+.guess-form-single {
+	grid-template-columns: 1fr;
+}
+
 .guess-form input {
 	min-width: 0;
 	border-radius: 18px;

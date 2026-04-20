@@ -534,26 +534,34 @@
 				</div>
 			</div>
 
-			<form
-				class="guess-form"
-				onsubmit={(event) => {
-					event.preventDefault();
-					submitGuess();
-				}}
-			>
-				<label class="sr-only" for="guess">{gameCopy.startGuessingLabel}</label>
-				<input
-					id="guess"
-					bind:value={guess}
-					maxlength="24"
-					placeholder={gameCopy.placeholder}
-					autocomplete="off"
-					disabled={solved || loadingPuzzle || !puzzle}
-				/>
-				<button type="submit" disabled={solved || loadingPuzzle || !puzzle}
-					>{gameCopy.submitGuessLabel}</button
+			{#if solved}
+				<div class="guess-form guess-form-single">
+					<button type="button" onclick={resetGame} disabled={loadingPuzzle}>
+						{gameCopy.newPuzzleLabel}
+					</button>
+				</div>
+			{:else}
+				<form
+					class="guess-form"
+					onsubmit={(event) => {
+						event.preventDefault();
+						submitGuess();
+					}}
 				>
-			</form>
+					<label class="sr-only" for="guess">{gameCopy.startGuessingLabel}</label>
+					<input
+						id="guess"
+						bind:value={guess}
+						maxlength="24"
+						placeholder={gameCopy.placeholder}
+						autocomplete="off"
+						disabled={loadingPuzzle || !puzzle}
+					/>
+					<button type="submit" disabled={loadingPuzzle || !puzzle}
+						>{gameCopy.submitGuessLabel}</button
+					>
+				</form>
+			{/if}
 
 			<p class={`feedback feedback-${feedbackTone}`}>{feedback}</p>
 
