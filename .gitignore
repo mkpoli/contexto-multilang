@@ -39,3 +39,6 @@ data/*
 target/
 **/*.rs.bk
 *.pdb
+
+.snapshots/
+tools/game-vocab-tools/.cache/
