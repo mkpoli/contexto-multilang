@@ -31,6 +31,7 @@
 	let { game }: { game: GameId } = $props();
 
 	const MAX_RANK_HINT_USES = 3;
+	const MIN_GUESSES_BEFORE_GIVEUP = 30;
 
 	const normalize = (value: string) => value.trim().replace(/\s+/g, '');
 
@@ -146,6 +147,18 @@
 	let canRevealCharacter = $derived(
 		!solved && answerLength >= 2 && rankHintUses >= MAX_RANK_HINT_USES && nextCharacterToReveal >= 0
 	);
+	let allHintsExhausted = $derived(
+		showHint &&
+			rankHintUses >= MAX_RANK_HINT_USES &&
+			(answerLength < 2 || revealedCharacterHints.length >= Math.max(0, answerLength - 1))
+	);
+	let canGiveUp = $derived(
+		!solved &&
+			!loadingPuzzle &&
+			puzzle !== null &&
+			allHintsExhausted &&
+			guessCount >= MIN_GUESSES_BEFORE_GIVEUP
+	);
 
 	function pickRankHint(): GuessProfile | null {
 		if (!puzzle) return null;
@@ -184,7 +197,7 @@
 		return betterCandidates[0] ?? null;
 	}
 
-	function applyGuessResult(match: GuessProfile, source: 'user' | 'hint') {
+	function applyGuessResult(match: GuessProfile, source: 'user' | 'hint' | 'giveup') {
 		guessCount += 1;
 		const nextGuess = {
 			...match,
@@ -193,6 +206,12 @@
 		} satisfies GuessResult;
 		history = sortHistory([...history, nextGuess]);
 		latestGuess = nextGuess;
+
+		if (source === 'giveup') {
+			feedback = format(gameCopy.giveUpFeedback, { answer: puzzle?.answer ?? '' });
+			feedbackTone = 'neutral';
+			return;
+		}
 
 		if (source === 'hint') {
 			feedback =
@@ -458,6 +477,36 @@
 		feedback = format(gameCopy.characterHintFeedback, { n: nextCharacterToReveal + 1, char });
 		feedbackTone = 'neutral';
 	}
+
+	async function revealAnswer() {
+		if (!puzzle || !canGiveUp) return;
+		if (!window.confirm(gameCopy.giveUpConfirmPrompt)) return;
+
+		const response = await fetch(`${apiBase}/guess`, {
+			method: 'POST',
+			headers: { 'content-type': 'application/json' },
+			body: JSON.stringify({ answer: puzzle.answerKey, word: puzzle.answer })
+		});
+
+		if (response.ok) {
+			const { match } = (await response.json()) as GuessLookupResponse;
+			if (match) {
+				applyGuessResult(match, 'giveup');
+				return;
+			}
+		}
+
+		applyGuessResult(
+			{
+				word: puzzle.answer,
+				key: puzzle.answerKey,
+				rank: 1,
+				similarity: 100,
+				note: undefined
+			},
+			'giveup'
+		);
+	}
 </script>
 
 <svelte:head>
@@ -529,6 +578,11 @@
 					{#if canRevealCharacter && nextCharacterToReveal >= 0}
 						<button class="ghost-button" type="button" onclick={revealCharacterHint}>
 							{format(gameCopy.characterHintButton, { n: nextCharacterToReveal + 1 })}
+						</button>
+					{/if}
+					{#if canGiveUp}
+						<button class="ghost-button give-up-button" type="button" onclick={revealAnswer}>
+							{gameCopy.giveUpLabel}
 						</button>
 					{/if}
 				</div>
