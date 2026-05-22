@@ -4,7 +4,9 @@ Rust tooling for the end-to-end Japanese vocabulary pipeline.
 
 What it does:
 
-- streams Japanese article dump `.bz2` shards directly
+- streams Japanese article dump `.bz2` shards directly (jawiki + jawikinews, jawikiquote, jawikibooks, jawikisource)
+- ingests the Aozora Bunko bulk archive (zip-of-zips, Shift_JIS .txt, ruby/annotation stripped)
+- streams a CC-100 `ja.txt.xz` plaintext corpus, splitting on blank lines
 - tokenizes with `vibrato`
 - extracts lemma forms for content-heavy parts of speech
 - applies local Japanese stopword lists
@@ -64,6 +66,28 @@ cargo run --release -- \
   --embedding-dim 256 \
   --build-output-dir ../../src/lib/generated/ja-game
 ```
+
+Build with the full expanded corpus (jawiki + sister projects + Aozora + a CC-100 slice):
+
+```sh
+cargo run --release -- \
+  --all-pages-articles-shards \
+  --input-dir ../../data/ja/wikimedia \
+  --aozora-zip ../../data/ja/aozora/aozorabunko-master.zip \
+  --cc100-xz ../../data/ja/cc100/ja.txt.xz \
+  --cc100-max-docs 2000000 \
+  --dictionary ../../data/ja/wikimedia/vibrato/system.dic.zst \
+  --stopwords-dir ../../data/ja/wikimedia/stopwords \
+  --min-count 20 \
+  --max-vocab 40000 \
+  --embedding-dim 256 \
+  --build-output-dir ../../src/lib/generated/ja-game
+```
+
+Source kinds are auto-detected from filename. The wiki glob in `--all-pages-articles-shards`
+picks up jawiki + jawikinews/jawikiquote/jawikibooks/jawikisource `*.bz2`. Aozora and CC-100
+are off by default; pass `--aozora-zip` / `--cc100-xz` to include them. `--cc100-max-docs`
+caps how many CC-100 documents to ingest (the full file is ~16 GB compressed).
 
 Outputs in build mode:
 
