@@ -15,6 +15,7 @@ game-vocab-stats = "game_vocab_tools.inspect_stats:main"
 game-vocab-neighbors = "game_vocab_tools.inspect_neighbors:main"
 game-vocab-compare = "game_vocab_tools.compare_models:main"
 game-vocab-refilter-playable = "game_vocab_tools.refilter_playable:main"
+game-vocab-categorize = "game_vocab_tools.categorize_vocab:main"
 
 [tool.uv]
 package = true
