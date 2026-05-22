@@ -1,5 +1,6 @@
 import { createGameData } from '$lib/server/create-game-data';
 
+import categoriesAssetUrl from '../generated/ja-game/categories.json?url';
 import metadataAssetUrl from '../generated/ja-game/metadata.json?url';
 import variantsAssetUrl from '../generated/ja-game/variants.json?url';
 import vocabAssetUrl from '../generated/ja-game/vocab.json?url';
@@ -14,6 +15,7 @@ export const { getRandomPuzzle, hasKnownWord, lookupGuess } = createGameData({
 	metadataAssetUrl,
 	vocabAssetUrl,
 	variantsAssetUrl,
+	categoriesAssetUrl,
 	embedChunkGlob,
 	embedKeyPrefix: '../generated/ja-game',
 	classifyRow: (row) => {

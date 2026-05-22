@@ -471,12 +471,25 @@ input {
 	border-color: rgba(255, 178, 89, 0.45);
 }
 
-.hint-panel {
+.hint-panel,
+.genre-panel {
 	margin-bottom: 18px;
 	padding: 14px 16px;
 	border-radius: 18px;
 	background: rgba(255, 255, 255, 0.05);
 	border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.genre-panel {
+	display: flex;
+	align-items: baseline;
+	gap: 12px;
+}
+
+.genre-panel strong {
+	font-size: 1.15rem;
+	font-weight: 700;
+	color: var(--accent, #ff9a4d);
 }
 
 .hint-panel strong {
