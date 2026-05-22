@@ -565,38 +565,38 @@
 		<div class="hero-copy">
 			<div class="hero-topline">
 				<p class="eyebrow">{gameCopy.eyebrow}</p>
-				<div class="hero-controls">
-					<div class="hero-meta-row">
-						<a class="origin-link" href="https://contexto.me/en/" target="_blank" rel="noreferrer">
-							{gameCopy.originalGameLabel}
-						</a>
-						<div class="switcher" aria-label={gameCopy.gameSelectorLabel}>
-							<a class:active={game === 'zh'} href="/zh">ZH</a>
-							<a class:active={game === 'ja'} href="/ja">JA</a>
-							<a class:active={game === 'ko'} href="/ko">KO</a>
-							<a class:active={game === 'ain'} href="/ain">AIN</a>
-						</div>
+				<div class="hero-meta-row">
+					<a class="origin-link" href="https://contexto.me/en/" target="_blank" rel="noreferrer">
+						{gameCopy.originalGameLabel}
+					</a>
+					<div class="switcher" aria-label={gameCopy.gameSelectorLabel}>
+						<a class:active={game === 'zh'} href="/zh">ZH</a>
+						<a class:active={game === 'ja'} href="/ja">JA</a>
+						<a class:active={game === 'ko'} href="/ko">KO</a>
+						<a class:active={game === 'ain'} href="/ain">AIN</a>
 					</div>
-					<button
-						class="ghost-button hero-action-button"
-						type="button"
-						onclick={resetGame}
-						disabled={loadingPuzzle}
-					>
-						<svg aria-hidden="true" viewBox="0 0 24 24" fill="none">
-							<path
-								d="M19 8V5m0 0h-3m3 0-3.4 3.4A8 8 0 1 0 20 12"
-								stroke="currentColor"
-								stroke-width="1.8"
-								stroke-linecap="round"
-								stroke-linejoin="round"
-							/>
-						</svg>
-						<span>{gameCopy.newPuzzleLabel}</span>
-					</button>
 				</div>
 			</div>
-			<h1>{hasStarted ? gameCopy.startedTitle : gameCopy.freshTitle}</h1>
+			<div class="hero-title-row">
+				<h1>{hasStarted ? gameCopy.startedTitle : gameCopy.freshTitle}</h1>
+				<button
+					class="ghost-button hero-action-button"
+					type="button"
+					onclick={resetGame}
+					disabled={loadingPuzzle}
+				>
+					<svg aria-hidden="true" viewBox="0 0 24 24" fill="none">
+						<path
+							d="M19 8V5m0 0h-3m3 0-3.4 3.4A8 8 0 1 0 20 12"
+							stroke="currentColor"
+							stroke-width="1.8"
+							stroke-linecap="round"
+							stroke-linejoin="round"
+						/>
+					</svg>
+					<span>{gameCopy.newPuzzleLabel}</span>
+				</button>
+			</div>
 			{#if !hasStarted}
 				<p class="lede">{gameCopy.intro}</p>
 			{:else}
