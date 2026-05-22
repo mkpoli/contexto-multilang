@@ -32,6 +32,7 @@ type LoadedGameData = {
 	lookupToIds: Map<string, number[]>;
 	embeddings: Float32Array;
 	playableIds: number[];
+	categories: Record<string, string>;
 };
 
 type AnswerCache = {
@@ -44,6 +45,7 @@ type CreateGameDataOptions = {
 	metadataAssetUrl: string;
 	vocabAssetUrl: string;
 	variantsAssetUrl: string;
+	categoriesAssetUrl?: string;
 	embedChunkGlob: Record<string, string>;
 	embedKeyPrefix: string;
 	classifyRow: (row: VocabRow) => string;
@@ -78,6 +80,7 @@ export const createGameData = ({
 	metadataAssetUrl,
 	vocabAssetUrl,
 	variantsAssetUrl,
+	categoriesAssetUrl,
 	embedChunkGlob,
 	embedKeyPrefix,
 	classifyRow,
@@ -106,15 +109,17 @@ export const createGameData = ({
 	const loadGameData = async (): Promise<LoadedGameData> => {
 		if (!dataPromise) {
 			dataPromise = (async () => {
-				const [metadataText, vocabText, variantsText] = await Promise.all([
+				const [metadataText, vocabText, variantsText, categoriesText] = await Promise.all([
 					read(metadataAssetUrl).text(),
 					read(vocabAssetUrl).text(),
-					read(variantsAssetUrl).text()
+					read(variantsAssetUrl).text(),
+					categoriesAssetUrl ? read(categoriesAssetUrl).text() : Promise.resolve('{}')
 				]);
 
 				const metadata = JSON.parse(metadataText) as Metadata;
 				const vocab = JSON.parse(vocabText) as VocabRow[];
 				const variantRows = JSON.parse(variantsText) as Record<string, number[]>;
+				const categories = JSON.parse(categoriesText) as Record<string, string>;
 				const wordToId = new Map(vocab.map((entry, index) => [entry.word, index]));
 				const lookupToIds = new Map<string, number[]>();
 				for (const [word, ids] of Object.entries(variantRows)) {
@@ -149,7 +154,8 @@ export const createGameData = ({
 					wordToId,
 					lookupToIds,
 					embeddings,
-					playableIds: metadata.playable_ids
+					playableIds: metadata.playable_ids,
+					categories
 				};
 			})();
 		}
@@ -254,6 +260,7 @@ export const createGameData = ({
 				category: classifyRow(row),
 				frequencyBand: 'high',
 				difficulty,
+				semanticCategory: data.categories[String(answerId)] ?? null,
 				intro: buildIntro(row),
 				closestWords: cache?.neighbors ?? []
 			};

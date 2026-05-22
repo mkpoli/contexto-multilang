@@ -30,6 +30,7 @@
 		showHint: boolean;
 		rankHintUses: number;
 		revealedCharacterHints: number[];
+		showGenreHint?: boolean;
 	};
 
 	const SESSION_VERSION = 2;
@@ -117,6 +118,7 @@
 	let showHint = $state(false);
 	let rankHintUses = $state(0);
 	let revealedCharacterHints = $state<number[]>([]);
+	let showGenreHint = $state(false);
 	let loadingPuzzle = $state(true);
 	let sessionReady = false;
 	let initializedGame: GameId | null = null;
@@ -158,6 +160,8 @@
 	let canRevealCharacter = $derived(
 		!solved && answerLength >= 2 && rankHintUses >= MAX_RANK_HINT_USES && nextCharacterToReveal >= 0
 	);
+	let hasGenreHint = $derived(!!puzzle?.semanticCategory);
+	let canShowGenreHint = $derived(!solved && hasGenreHint && !showGenreHint);
 	let allHintsExhausted = $derived(
 		showHint &&
 			rankHintUses >= MAX_RANK_HINT_USES &&
@@ -276,6 +280,7 @@
 			showHint = session.showHint;
 			rankHintUses = session.rankHintUses ?? 0;
 			revealedCharacterHints = normalizedRevealedCharacterHints;
+			showGenreHint = session.showGenreHint ?? false;
 			loadingPuzzle = false;
 			return true;
 		} catch {
@@ -296,7 +301,8 @@
 			showClosestWords,
 			showHint,
 			rankHintUses,
-			revealedCharacterHints
+			revealedCharacterHints,
+			showGenreHint
 		};
 		localStorage.setItem(sessionStorageKey, JSON.stringify(session));
 	}
@@ -311,6 +317,7 @@
 		showHint = false;
 		rankHintUses = 0;
 		revealedCharacterHints = [];
+		showGenreHint = false;
 		feedbackTone = 'neutral';
 		loadingPuzzle = true;
 	}
@@ -332,6 +339,7 @@
 			showHint = false;
 			rankHintUses = 0;
 			revealedCharacterHints = [];
+			showGenreHint = false;
 			feedback = gameCopy.newPuzzleFeedback;
 			feedbackTone = 'neutral';
 		} catch {
@@ -515,6 +523,18 @@
 		);
 	}
 
+	function revealGenreHint() {
+		if (!puzzle || solved) return;
+		if (!puzzle.semanticCategory) {
+			feedback = gameCopy.genreHintUnavailableFeedback;
+			feedbackTone = 'warning';
+			return;
+		}
+		showGenreHint = true;
+		feedback = format(gameCopy.genreHintFeedback, { category: puzzle.semanticCategory });
+		feedbackTone = 'neutral';
+	}
+
 	function revealCharacterHint() {
 		if (!puzzle || solved || nextCharacterToReveal < 0) return;
 		const char = answerCharacters[nextCharacterToReveal];
@@ -615,6 +635,11 @@
 							>{gameCopy.lengthHintLabel}</button
 						>
 					{/if}
+					{#if canShowGenreHint}
+						<button class="ghost-button" type="button" onclick={revealGenreHint}
+							>{gameCopy.genreHintLabel}</button
+						>
+					{/if}
 					{#if canShowRankHint}
 						<button class="ghost-button" type="button" onclick={revealRankHint}>
 							{gameCopy.proximityHintLabel}
@@ -677,6 +702,13 @@
 							</div>
 						{/each}
 					</div>
+				</div>
+			{/if}
+
+			{#if showGenreHint && puzzle?.semanticCategory && !solved}
+				<div class="genre-panel">
+					<span class="label">{gameCopy.genrePanelLabel}</span>
+					<strong>{puzzle.semanticCategory}</strong>
 				</div>
 			{/if}
 

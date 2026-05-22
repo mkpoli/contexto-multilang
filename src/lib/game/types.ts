@@ -21,6 +21,7 @@ export type GamePuzzle = {
 	category: string;
 	frequencyBand: 'high';
 	difficulty: Difficulty;
+	semanticCategory: string | null;
 	intro: string;
 	closestWords: GuessProfile[];
 };

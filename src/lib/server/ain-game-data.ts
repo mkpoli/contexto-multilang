@@ -1,5 +1,6 @@
 import { createGameData } from '$lib/server/create-game-data';
 
+import categoriesAssetUrl from '../generated/ain-game/categories.json?url';
 import metadataAssetUrl from '../generated/ain-game/metadata.json?url';
 import variantsAssetUrl from '../generated/ain-game/variants.json?url';
 import vocabAssetUrl from '../generated/ain-game/vocab.json?url';
@@ -14,6 +15,7 @@ export const { getRandomPuzzle, hasKnownWord, lookupGuess } = createGameData({
 	metadataAssetUrl,
 	vocabAssetUrl,
 	variantsAssetUrl,
+	categoriesAssetUrl,
 	embedChunkGlob,
 	embedKeyPrefix: '../generated/ain-game',
 	normalizeLookupWord: (word) => word.replaceAll('_', ''),

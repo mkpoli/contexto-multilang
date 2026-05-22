@@ -1,5 +1,6 @@
 import { createGameData } from '$lib/server/create-game-data';
 
+import categoriesAssetUrl from '../generated/ko-game/categories.json?url';
 import metadataAssetUrl from '../generated/ko-game/metadata.json?url';
 import variantsAssetUrl from '../generated/ko-game/variants.json?url';
 import vocabAssetUrl from '../generated/ko-game/vocab.json?url';
@@ -14,6 +15,7 @@ export const { getRandomPuzzle, hasKnownWord, lookupGuess } = createGameData({
 	metadataAssetUrl,
 	vocabAssetUrl,
 	variantsAssetUrl,
+	categoriesAssetUrl,
 	embedChunkGlob,
 	embedKeyPrefix: '../generated/ko-game',
 	classifyRow: (row) => {

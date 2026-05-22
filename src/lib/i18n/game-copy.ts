@@ -66,6 +66,10 @@ export type GameCopy = {
 	difficultyHard: string;
 	difficultyHardHint: string;
 	difficultyCancel: string;
+	genreHintLabel: string;
+	genreHintFeedback: string;
+	genreHintUnavailableFeedback: string;
+	genrePanelLabel: string;
 	proximityHintNote: string;
 	originalGameLabel: string;
 	gameSelectorLabel: string;
@@ -169,6 +173,13 @@ export const getGameCopy = (game: GameId): GameCopy => {
 		difficultyHard: m.game_difficulty_hard({}, { locale }),
 		difficultyHardHint: m.game_difficulty_hard_hint({}, { locale }),
 		difficultyCancel: m.game_difficulty_cancel({}, { locale }),
+		genreHintLabel: m.game_genre_hint_label({}, { locale }),
+		genreHintFeedback: m.game_genre_hint_feedback(
+			{ category: token('category') },
+			{ locale }
+		),
+		genreHintUnavailableFeedback: m.game_genre_hint_unavailable_feedback({}, { locale }),
+		genrePanelLabel: m.game_genre_panel_label({}, { locale }),
 		proximityHintNote: m.game_proximity_hint_note(
 			{ used: token('used'), max: token('max') },
 			{ locale }
