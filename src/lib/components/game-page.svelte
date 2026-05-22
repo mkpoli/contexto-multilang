@@ -146,9 +146,22 @@
 		}))
 	);
 	let canShowLengthHint = $derived(!showHint && !solved);
-	let canShowRankHint = $derived(!solved && rankHintUses < MAX_RANK_HINT_USES);
+	let hasRankHintCandidate = $derived.by(() => {
+		if (!puzzle || solved) return false;
+		const guessedKeys = new Set(history.map((entry) => entry.key ?? entry.word));
+		const pool = [...puzzle.closestWords, ...puzzle.hintLadder];
+		return pool.some((entry) => {
+			if (entry.rank <= 1) return false;
+			if (bestRank !== null && entry.rank >= bestRank) return false;
+			return !guessedKeys.has(entry.key ?? entry.word);
+		});
+	});
+	let canShowRankHint = $derived(
+		!solved && rankHintUses < MAX_RANK_HINT_USES && hasRankHintCandidate
+	);
+	let rankHintsDone = $derived(rankHintUses >= MAX_RANK_HINT_USES || !hasRankHintCandidate);
 	let nextCharacterToReveal = $derived.by(() => {
-		if (!(!solved && answerLength >= 2 && rankHintUses >= MAX_RANK_HINT_USES)) {
+		if (!(!solved && answerLength >= 2 && rankHintsDone)) {
 			return -1;
 		}
 
@@ -158,7 +171,7 @@
 		return nextIndex ?? -1;
 	});
 	let canRevealCharacter = $derived(
-		!solved && answerLength >= 2 && rankHintUses >= MAX_RANK_HINT_USES && nextCharacterToReveal >= 0
+		!solved && answerLength >= 2 && rankHintsDone && nextCharacterToReveal >= 0
 	);
 	let hasGenreHint = $derived(!!puzzle?.semanticCategory);
 	let canShowGenreHint = $derived(!solved && hasGenreHint && !showGenreHint);
