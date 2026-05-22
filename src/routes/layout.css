@@ -111,20 +111,29 @@ input {
 	margin: 0;
 }
 
-.hero-controls {
-	display: flex;
-	flex-direction: column;
-	align-items: flex-end;
-	gap: 14px;
-	justify-content: flex-start;
-}
-
 .hero-meta-row {
 	display: flex;
 	align-items: center;
 	gap: 14px;
 	flex-wrap: wrap;
 	justify-content: flex-end;
+}
+
+.hero-title-row {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 18px;
+	flex-wrap: wrap;
+}
+
+.hero-title-row h1 {
+	flex: 1 1 auto;
+	min-width: 0;
+}
+
+.hero-title-row .hero-action-button {
+	flex: 0 0 auto;
 }
 
 .hero-action-button {
@@ -345,10 +354,34 @@ input {
 	transform: translateY(-1px);
 }
 
+.input-card {
+	position: relative;
+	border: 1px solid rgba(255, 154, 77, 0.22);
+	box-shadow:
+		0 24px 60px rgba(255, 107, 44, 0.08),
+		var(--shadow);
+}
+
+.input-card::before {
+	content: '';
+	position: absolute;
+	inset: 0;
+	border-radius: inherit;
+	background:
+		radial-gradient(120% 80% at 0% 0%, rgba(255, 154, 77, 0.1), transparent 60%);
+	pointer-events: none;
+	z-index: 0;
+}
+
+.input-card > * {
+	position: relative;
+	z-index: 1;
+}
+
 .guess-form {
 	display: grid;
 	grid-template-columns: minmax(0, 1fr) auto;
-	gap: 12px;
+	gap: 14px;
 	margin-bottom: 14px;
 }
 
@@ -358,27 +391,48 @@ input {
 
 .guess-form input {
 	min-width: 0;
-	border-radius: 18px;
-	border: 1px solid rgba(255, 255, 255, 0.14);
-	background: rgba(255, 255, 255, 0.06);
-	padding: 16px 18px;
+	border-radius: 20px;
+	border: 1.5px solid rgba(255, 255, 255, 0.20);
+	background: rgba(255, 255, 255, 0.10);
+	padding: 22px 24px;
 	color: var(--text-main);
+	font-size: 1.18rem;
+	font-weight: 500;
+	letter-spacing: 0.02em;
 	outline: none;
-	transition: border-color 0.2s ease;
+	box-shadow:
+		inset 0 1px 0 rgba(255, 255, 255, 0.06),
+		0 10px 28px rgba(0, 0, 0, 0.18);
+	transition:
+		border-color 0.2s ease,
+		box-shadow 0.2s ease,
+		background 0.2s ease;
+}
+
+.guess-form input:hover:not(:focus) {
+	border-color: rgba(255, 255, 255, 0.30);
+	background: rgba(255, 255, 255, 0.12);
 }
 
 .guess-form input:focus {
-	border-color: rgba(255, 154, 77, 0.7);
+	border-color: rgba(255, 154, 77, 0.85);
+	box-shadow:
+		inset 0 1px 0 rgba(255, 255, 255, 0.08),
+		0 0 0 4px rgba(255, 154, 77, 0.18),
+		0 12px 32px rgba(255, 107, 44, 0.15);
 }
 
 .guess-form input::placeholder {
-	color: rgba(247, 240, 229, 0.42);
+	color: rgba(247, 240, 229, 0.5);
 }
 
 .guess-form button {
 	background: linear-gradient(135deg, var(--accent) 0%, var(--accent-strong) 100%);
 	color: #1a130f;
 	font-weight: 700;
+	font-size: 1.05rem;
+	padding: 22px 28px;
+	box-shadow: 0 14px 30px rgba(255, 107, 44, 0.28);
 }
 
 .guess-form button:disabled {
@@ -692,8 +746,8 @@ input {
 		align-items: flex-start;
 	}
 
-	.hero-controls,
-	.hero-meta-row {
+	.hero-meta-row,
+	.hero-title-row {
 		width: 100%;
 		align-items: stretch;
 	}
