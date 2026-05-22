@@ -1,5 +1,10 @@
 import { read } from '$app/server';
-import type { GamePuzzle, GuessProfile } from '$lib/game/types';
+import {
+	DEFAULT_DIFFICULTY,
+	type Difficulty,
+	type GamePuzzle,
+	type GuessProfile
+} from '$lib/game/types';
 
 type Metadata = {
 	vocab_size: number;
@@ -49,6 +54,20 @@ type CreateGameDataOptions = {
 
 const MAX_CACHED_ANSWERS = 24;
 const MIN_PLAYABLE_DOC_FREQUENCY = 200;
+
+// Vocab IDs are emitted in count-desc order, so a lower id == a more frequent
+// word. Banding the *id-sorted* playable pool into thirds gives:
+//   easy   = most-frequent third
+//   medium = middle third
+//   hard   = least-frequent (but still playable) third
+const pickDifficultyPool = (pool: number[], difficulty: Difficulty): number[] => {
+	if (pool.length < 6) return pool;
+	const sorted = [...pool].sort((a, b) => a - b);
+	const third = Math.floor(sorted.length / 3);
+	if (difficulty === 'easy') return sorted.slice(0, third);
+	if (difficulty === 'hard') return sorted.slice(sorted.length - third);
+	return sorted.slice(third, sorted.length - third);
+};
 
 const toPercent = (score: number) => Math.max(1, Math.min(100, Math.round(score * 100)));
 const toScoreBasisPoints = (score: number) =>
@@ -216,14 +235,15 @@ export const createGameData = ({
 	};
 
 	return {
-		getRandomPuzzle: async (): Promise<GamePuzzle> => {
+		getRandomPuzzle: async (difficulty: Difficulty = DEFAULT_DIFFICULTY): Promise<GamePuzzle> => {
 			const data = await loadGameData();
 			const baseSource =
 				data.playableIds.length > 0 ? data.playableIds : data.vocab.map((_, index) => index);
 			const source = baseSource.filter(
 				(id) => data.vocab[id]?.doc_frequency >= MIN_PLAYABLE_DOC_FREQUENCY
 			);
-			const answerPool = source.length > 0 ? source : baseSource;
+			const fallbackPool = source.length > 0 ? source : baseSource;
+			const answerPool = pickDifficultyPool(fallbackPool, difficulty);
 			const answerId = answerPool[Math.floor(Math.random() * answerPool.length)];
 			const row = data.vocab[answerId];
 			const cache = (await getAnswerCache(row.word))?.cache;
@@ -233,6 +253,7 @@ export const createGameData = ({
 				answerKey: row.word,
 				category: classifyRow(row),
 				frequencyBand: 'high',
+				difficulty,
 				intro: buildIntro(row),
 				closestWords: cache?.neighbors ?? []
 			};

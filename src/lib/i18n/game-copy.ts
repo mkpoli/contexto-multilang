@@ -57,6 +57,15 @@ export type GameCopy = {
 	giveUpLabel: string;
 	giveUpConfirmPrompt: string;
 	giveUpFeedback: string;
+	difficultyTitle: string;
+	difficultySubtitle: string;
+	difficultyEasy: string;
+	difficultyEasyHint: string;
+	difficultyMedium: string;
+	difficultyMediumHint: string;
+	difficultyHard: string;
+	difficultyHardHint: string;
+	difficultyCancel: string;
 	proximityHintNote: string;
 	originalGameLabel: string;
 	gameSelectorLabel: string;
@@ -151,6 +160,15 @@ export const getGameCopy = (game: GameId): GameCopy => {
 		giveUpLabel: m.game_give_up_label({}, { locale }),
 		giveUpConfirmPrompt: m.game_give_up_confirm_prompt({}, { locale }),
 		giveUpFeedback: m.game_give_up_feedback({ answer: token('answer') }, { locale }),
+		difficultyTitle: m.game_difficulty_title({}, { locale }),
+		difficultySubtitle: m.game_difficulty_subtitle({}, { locale }),
+		difficultyEasy: m.game_difficulty_easy({}, { locale }),
+		difficultyEasyHint: m.game_difficulty_easy_hint({}, { locale }),
+		difficultyMedium: m.game_difficulty_medium({}, { locale }),
+		difficultyMediumHint: m.game_difficulty_medium_hint({}, { locale }),
+		difficultyHard: m.game_difficulty_hard({}, { locale }),
+		difficultyHardHint: m.game_difficulty_hard_hint({}, { locale }),
+		difficultyCancel: m.game_difficulty_cancel({}, { locale }),
 		proximityHintNote: m.game_proximity_hint_note(
 			{ used: token('used'), max: token('max') },
 			{ locale }

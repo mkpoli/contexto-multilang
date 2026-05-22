@@ -2,7 +2,16 @@
 	import { onMount } from 'svelte';
 
 	import { getGameCopy } from '$lib/i18n/game-copy';
-	import type { GameId, GamePuzzle, GuessLookupResponse, GuessProfile } from '$lib/game/types';
+	import {
+		DEFAULT_DIFFICULTY,
+		DIFFICULTIES,
+		isDifficulty,
+		type Difficulty,
+		type GameId,
+		type GamePuzzle,
+		type GuessLookupResponse,
+		type GuessProfile
+	} from '$lib/game/types';
 
 	type GuessResult = GuessProfile & {
 		order: number;
@@ -112,6 +121,8 @@
 	let sessionReady = false;
 	let initializedGame: GameId | null = null;
 	let loadVersion = 0;
+	let difficultyDialogOpen = $state(false);
+	let preferredDifficulty = $state<Difficulty>(DEFAULT_DIFFICULTY);
 
 	let gameCopy = $derived(getGameCopy(game));
 	let sessionStorageKey = $derived(`contexto-multilang:${game}-session`);
@@ -304,15 +315,16 @@
 		loadingPuzzle = true;
 	}
 
-	async function loadPuzzle() {
+	async function loadPuzzle(difficulty: Difficulty = preferredDifficulty) {
 		const currentLoadVersion = ++loadVersion;
 		loadingPuzzle = true;
 		try {
-			const response = await fetch(`${apiBase}/puzzle`);
+			const response = await fetch(`${apiBase}/puzzle?difficulty=${difficulty}`);
 			if (!response.ok) throw new Error('Failed to load puzzle');
 			const nextPuzzle = (await response.json()) as GamePuzzle;
 			if (currentLoadVersion != loadVersion) return;
 			puzzle = nextPuzzle;
+			preferredDifficulty = nextPuzzle.difficulty ?? difficulty;
 			guessCount = 0;
 			history = [];
 			latestGuess = null;
@@ -346,6 +358,12 @@
 	}
 
 	onMount(() => {
+		try {
+			const stored = localStorage.getItem(PREFERRED_DIFFICULTY_KEY);
+			if (isDifficulty(stored)) preferredDifficulty = stored;
+		} catch {
+			// ignore disabled-storage errors
+		}
 		sessionReady = true;
 		initializeGameState();
 		initializedGame = game;
@@ -428,7 +446,8 @@
 	}
 
 	async function resetGame() {
-		if (puzzle && !window.confirm(gameCopy.newPuzzleConfirmPrompt)) {
+		if (puzzle) {
+			difficultyDialogOpen = true;
 			return;
 		}
 
@@ -436,6 +455,33 @@
 		localStorage.removeItem(sessionStorageKey);
 		await loadPuzzle();
 	}
+
+	async function startPuzzle(difficulty: Difficulty) {
+		difficultyDialogOpen = false;
+		preferredDifficulty = difficulty;
+		guess = '';
+		localStorage.removeItem(sessionStorageKey);
+		await loadPuzzle(difficulty);
+	}
+
+	function cancelDifficultyDialog() {
+		difficultyDialogOpen = false;
+	}
+
+	function onDifficultyKeydown(event: KeyboardEvent) {
+		if (event.key === 'Escape') cancelDifficultyDialog();
+	}
+
+	const PREFERRED_DIFFICULTY_KEY = 'contexto-multilang:preferred-difficulty';
+
+	$effect(() => {
+		if (!sessionReady) return;
+		try {
+			localStorage.setItem(PREFERRED_DIFFICULTY_KEY, preferredDifficulty);
+		} catch {
+			// ignore quota / disabled-storage errors
+		}
+	});
 
 	function revealHint() {
 		if (!puzzle || showHint) return;
@@ -777,3 +823,55 @@
 		</div>
 	</section>
 </div>
+
+{#if difficultyDialogOpen}
+	<div
+		class="difficulty-overlay"
+		role="presentation"
+		onclick={cancelDifficultyDialog}
+		onkeydown={onDifficultyKeydown}
+	>
+		<div
+			class="difficulty-dialog"
+			role="dialog"
+			aria-modal="true"
+			aria-labelledby="difficulty-dialog-title"
+			onclick={(event) => event.stopPropagation()}
+			onkeydown={onDifficultyKeydown}
+			tabindex="-1"
+		>
+			<h2 id="difficulty-dialog-title">{gameCopy.difficultyTitle}</h2>
+			<p class="difficulty-subtitle">{gameCopy.difficultySubtitle}</p>
+			<div class="difficulty-options">
+				{#each DIFFICULTIES as level}
+					<button
+						type="button"
+						class="difficulty-option"
+						class:selected={level === preferredDifficulty}
+						onclick={() => startPuzzle(level)}
+					>
+						<strong>
+							{level === 'easy'
+								? gameCopy.difficultyEasy
+								: level === 'medium'
+									? gameCopy.difficultyMedium
+									: gameCopy.difficultyHard}
+						</strong>
+						<span>
+							{level === 'easy'
+								? gameCopy.difficultyEasyHint
+								: level === 'medium'
+									? gameCopy.difficultyMediumHint
+									: gameCopy.difficultyHardHint}
+						</span>
+					</button>
+				{/each}
+			</div>
+			<div class="difficulty-actions">
+				<button class="ghost-button" type="button" onclick={cancelDifficultyDialog}>
+					{gameCopy.difficultyCancel}
+				</button>
+			</div>
+		</div>
+	</div>
+{/if}
