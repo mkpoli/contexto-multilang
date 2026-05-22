@@ -175,6 +175,16 @@
 			guessCount >= MIN_GUESSES_BEFORE_GIVEUP
 	);
 
+	function chooseHintTargetRank(currentBest: number | null): number {
+		if (currentBest === null) return 300;
+		// Smaller jumps when the player is already close, bigger when they're
+		// far. Roughly: step of 1 for rank ≤ 15, halve for 16–60, cut by 3×
+		// beyond that.
+		if (currentBest <= 15) return Math.max(2, currentBest - 1);
+		if (currentBest <= 60) return Math.max(2, Math.floor(currentBest / 2));
+		return Math.max(2, Math.floor(currentBest / 3));
+	}
+
 	function pickRankHint(): GuessProfile | null {
 		if (!puzzle) return null;
 
@@ -188,9 +198,7 @@
 		);
 		if (candidates.length === 0) return null;
 
-		// First hint, no best yet: aim for rank ~300 (gentle starting nudge).
-		// Otherwise aim to cut the rank by ~3x — gradual progression.
-		const targetRank = bestRank === null ? 300 : Math.max(20, Math.floor(bestRank / 3));
+		const targetRank = chooseHintTargetRank(bestRank);
 
 		const eligible =
 			bestRank === null
