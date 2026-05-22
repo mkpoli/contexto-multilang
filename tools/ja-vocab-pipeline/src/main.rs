@@ -1,6 +1,6 @@
 use std::collections::{HashMap, HashSet};
 use std::fs::File;
-use std::io::{BufReader, Cursor, Read, Write};
+use std::io::{BufRead, BufReader, Cursor, Read, Write};
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::Arc;
@@ -8,6 +8,7 @@ use std::sync::Arc;
 use anyhow::{bail, Context, Result};
 use bzip2::read::BzDecoder;
 use clap::Parser;
+use encoding_rs::SHIFT_JIS;
 use html_escape::decode_html_entities;
 use indicatif::{ProgressBar, ProgressStyle};
 use quick_xml::events::Event;
@@ -20,6 +21,8 @@ use regex::Regex;
 use serde::Serialize;
 use vibrato::tokenizer::worker::Worker;
 use vibrato::{Dictionary, Tokenizer};
+use xz2::read::XzDecoder;
+use zip::ZipArchive;
 
 const MAX_EMBED_CHUNK_BYTES: usize = 25 * 1024 * 1024;
 const OVERSAMPLE: usize = 16;
@@ -41,6 +44,18 @@ struct Args {
 
     #[arg(long, default_value = "../../data/ja/wikimedia/stopwords")]
     stopwords_dir: PathBuf,
+
+    /// Optional Aozora Bunko bulk archive (e.g. aozorabunko-master.zip).
+    #[arg(long)]
+    aozora_zip: Option<PathBuf>,
+
+    /// Optional CC-100 ja.txt.xz plaintext corpus.
+    #[arg(long)]
+    cc100_xz: Option<PathBuf>,
+
+    /// Cap on how many documents to read from CC-100 (it's huge).
+    #[arg(long)]
+    cc100_max_docs: Option<usize>,
 
     #[arg(long)]
     limit_pages: Option<usize>,
@@ -84,6 +99,35 @@ struct LocalCounts {
     term_frequency: HashMap<String, u32>,
     document_frequency: HashMap<String, u32>,
     total_pages: usize,
+}
+
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+enum SourceKind {
+    Wiki,
+    Aozora,
+    Cc100,
+}
+
+#[derive(Clone, Debug)]
+struct InputSource {
+    path: PathBuf,
+    kind: SourceKind,
+    /// Bytes used for progress accounting (decompressed-stream approximation when known).
+    bytes: u64,
+}
+
+const WIKI_DUMP_PREFIXES: &[&str] = &[
+    "jawiki-latest-pages-articles",
+    "jawikinews-latest-pages-articles",
+    "jawikiquote-latest-pages-articles",
+    "jawikibooks-latest-pages-articles",
+    "jawikisource-latest-pages-articles",
+];
+
+#[derive(Default)]
+struct Document {
+    title: String,
+    text: String,
 }
 
 #[derive(Default)]
@@ -188,20 +232,30 @@ struct Metadata {
 
 fn main() -> Result<()> {
     let args = Args::parse();
-    let input_paths = resolve_inputs(&args)?;
-    let total_bytes = total_input_bytes(&input_paths)?;
+    let sources = resolve_inputs(&args)?;
+    let total_bytes = total_input_bytes(&sources);
     let dictionary_bytes = Arc::new(load_dictionary_bytes(&args.dictionary)?);
     let stopwords = Arc::new(load_stopwords(&args.stopwords_dir)?);
     let cleaner = Arc::new(Cleaner::new()?);
     let sample_ranks = parse_sample_ranks(&args.sample_ranks)?;
 
+    println!("Resolved {} input source(s):", sources.len());
+    for s in &sources {
+        println!(
+            "  [{:?}] {} ({} bytes)",
+            s.kind,
+            s.path.display(),
+            s.bytes
+        );
+    }
+
     let count_progress = progress_bar(total_bytes, "Counting Japanese vocabulary")?;
     let global_page_limit = Arc::new(AtomicUsize::new(0));
-    let partials: Vec<Result<LocalCounts>> = input_paths
+    let partials: Vec<Result<LocalCounts>> = sources
         .par_iter()
-        .map(|path| {
+        .map(|source| {
             count_shard(
-                path,
+                source,
                 dictionary_bytes.clone(),
                 stopwords.clone(),
                 cleaner.clone(),
@@ -209,6 +263,7 @@ fn main() -> Result<()> {
                 args.limit_pages,
                 global_page_limit.clone(),
                 args.min_length,
+                args.cc100_max_docs,
             )
         })
         .collect();
@@ -228,7 +283,7 @@ fn main() -> Result<()> {
         args.max_vocab,
     );
 
-    println!("Input shards: {}", input_paths.len());
+    println!("Input sources: {}", sources.len());
     println!("Pages counted: {}", merged.total_pages);
     println!("Stopwords loaded: {}", stopwords.len());
     println!("Raw lemma types: {}", merged.term_frequency.len());
@@ -244,7 +299,7 @@ fn main() -> Result<()> {
     if let Some(output_dir) = &args.build_output_dir {
         let build_progress = progress_bar(total_bytes, "Building Japanese cooccurrence")?;
         let build_state = build_state(
-            &input_paths,
+            &sources,
             dictionary_bytes,
             stopwords,
             cleaner,
@@ -253,6 +308,7 @@ fn main() -> Result<()> {
             args.min_length,
             args.window_size,
             &selected,
+            args.cc100_max_docs,
         )?;
         build_progress.finish_and_clear();
         write_game_artifacts(output_dir, &selected, build_state, &args)?;
@@ -262,44 +318,69 @@ fn main() -> Result<()> {
     Ok(())
 }
 
-fn resolve_inputs(args: &Args) -> Result<Vec<PathBuf>> {
+fn detect_source_kind(path: &Path) -> Option<SourceKind> {
+    let name = path.file_name()?.to_str()?;
+    if name.ends_with(".bz2") && WIKI_DUMP_PREFIXES.iter().any(|p| name.starts_with(p)) {
+        return Some(SourceKind::Wiki);
+    }
+    if name.ends_with(".zip") && name.contains("aozora") {
+        return Some(SourceKind::Aozora);
+    }
+    if name.ends_with(".txt.xz") {
+        return Some(SourceKind::Cc100);
+    }
+    None
+}
+
+fn make_input_source(path: PathBuf, kind: SourceKind) -> Result<InputSource> {
+    let bytes = path
+        .metadata()
+        .with_context(|| format!("failed to stat {}", path.display()))?
+        .len();
+    Ok(InputSource { path, kind, bytes })
+}
+
+fn resolve_inputs(args: &Args) -> Result<Vec<InputSource>> {
+    let mut sources: Vec<InputSource> = Vec::new();
+
     if args.all_pages_articles_shards {
-        let mut inputs: Vec<PathBuf> = std::fs::read_dir(&args.input_dir)
+        let mut wiki_paths: Vec<PathBuf> = std::fs::read_dir(&args.input_dir)
             .with_context(|| format!("failed to read {}", args.input_dir.display()))?
             .filter_map(|entry| entry.ok().map(|e| e.path()))
-            .filter(|path| {
-                path.file_name()
-                    .and_then(|name| name.to_str())
-                    .map(|name| {
-                        name.starts_with("jawiki-latest-pages-articles") && name.ends_with(".bz2")
-                    })
-                    .unwrap_or(false)
-            })
+            .filter(|path| detect_source_kind(path) == Some(SourceKind::Wiki))
             .collect();
-        inputs.sort();
-        if inputs.is_empty() {
+        wiki_paths.sort();
+        for path in wiki_paths {
+            sources.push(make_input_source(path, SourceKind::Wiki)?);
+        }
+        if sources.is_empty() {
             bail!(
-                "no jawiki pages-articles shards found in {}",
+                "no jawiki / sister-project pages-articles shards found in {}",
                 args.input_dir.display()
             );
         }
-        return Ok(inputs);
+    } else if let Some(path) = &args.input_path {
+        let kind = detect_source_kind(path).unwrap_or(SourceKind::Wiki);
+        sources.push(make_input_source(path.clone(), kind)?);
     }
 
-    match &args.input_path {
-        Some(path) => Ok(vec![path.clone()]),
-        None => bail!("input_path is required unless --all-pages-articles-shards is used"),
+    if let Some(path) = &args.aozora_zip {
+        sources.push(make_input_source(path.clone(), SourceKind::Aozora)?);
     }
+    if let Some(path) = &args.cc100_xz {
+        sources.push(make_input_source(path.clone(), SourceKind::Cc100)?);
+    }
+
+    if sources.is_empty() {
+        bail!(
+            "no inputs supplied: pass an input_path, --all-pages-articles-shards, --aozora-zip, or --cc100-xz"
+        );
+    }
+    Ok(sources)
 }
 
-fn total_input_bytes(paths: &[PathBuf]) -> Result<u64> {
-    paths.iter().try_fold(0u64, |sum, path| {
-        Ok(sum
-            + path
-                .metadata()
-                .with_context(|| format!("failed to stat {}", path.display()))?
-                .len())
-    })
+fn total_input_bytes(sources: &[InputSource]) -> u64 {
+    sources.iter().map(|s| s.bytes).sum()
 }
 
 fn progress_bar(total: u64, message: &str) -> Result<ProgressBar> {
@@ -420,7 +501,7 @@ impl Cleaner {
 }
 
 fn count_shard(
-    path: &Path,
+    source: &InputSource,
     dictionary_bytes: Arc<Vec<u8>>,
     stopwords: Arc<HashSet<String>>,
     cleaner: Arc<Cleaner>,
@@ -428,16 +509,16 @@ fn count_shard(
     limit_pages: Option<usize>,
     global_page_limit: Arc<AtomicUsize>,
     min_length: usize,
+    cc100_max_docs: Option<usize>,
 ) -> Result<LocalCounts> {
     let dictionary = Dictionary::read(Cursor::new(dictionary_bytes.as_slice()))?;
     let tokenizer = Tokenizer::new(dictionary);
     let mut worker = tokenizer.new_worker();
     let mut counts = LocalCounts::default();
 
-    walk_pages(path, progress, |page| {
-        process_count_page(
-            page,
-            &cleaner,
+    walk_documents(source, &cleaner, progress, cc100_max_docs, |doc| {
+        process_count_doc(
+            doc,
             &stopwords,
             &mut worker,
             &mut counts,
@@ -449,9 +530,31 @@ fn count_shard(
     Ok(counts)
 }
 
-fn walk_pages<F>(path: &Path, progress: ProgressBar, mut on_page: F) -> Result<()>
+fn walk_documents<F>(
+    source: &InputSource,
+    cleaner: &Cleaner,
+    progress: ProgressBar,
+    cc100_max_docs: Option<usize>,
+    mut on_doc: F,
+) -> Result<()>
 where
-    F: FnMut(&PageRecord) -> Result<PageAction>,
+    F: FnMut(&Document) -> Result<PageAction>,
+{
+    match source.kind {
+        SourceKind::Wiki => walk_wiki(&source.path, cleaner, progress, &mut on_doc),
+        SourceKind::Aozora => walk_aozora(&source.path, progress, &mut on_doc),
+        SourceKind::Cc100 => walk_cc100(&source.path, progress, cc100_max_docs, &mut on_doc),
+    }
+}
+
+fn walk_wiki<F>(
+    path: &Path,
+    cleaner: &Cleaner,
+    progress: ProgressBar,
+    on_doc: &mut F,
+) -> Result<()>
+where
+    F: FnMut(&Document) -> Result<PageAction>,
 {
     let file = File::open(path).with_context(|| format!("failed to open {}", path.display()))?;
     let counting_reader = CountingReader {
@@ -507,8 +610,15 @@ where
                 b"revision" => state.in_revision = false,
                 b"title" | b"ns" | b"text" => state.capture_tag = None,
                 b"page" => {
-                    if matches!(on_page(&state.page)?, PageAction::Stop) {
-                        break;
+                    if state.page.namespace == "0" && !state.page.redirect {
+                        let cleaned = cleaner.clean(&state.page.text, &state.page.title);
+                        let doc = Document {
+                            title: std::mem::take(&mut state.page.title),
+                            text: cleaned,
+                        };
+                        if matches!(on_doc(&doc)?, PageAction::Stop) {
+                            break;
+                        }
                     }
                 }
                 _ => {}
@@ -520,9 +630,182 @@ where
     Ok(())
 }
 
-fn process_count_page(
-    page: &PageRecord,
-    cleaner: &Cleaner,
+fn walk_aozora<F>(path: &Path, progress: ProgressBar, on_doc: &mut F) -> Result<()>
+where
+    F: FnMut(&Document) -> Result<PageAction>,
+{
+    let total_bytes = path.metadata()?.len();
+    let file = File::open(path).with_context(|| format!("failed to open {}", path.display()))?;
+    let mut outer = ZipArchive::new(BufReader::new(file))
+        .with_context(|| format!("failed to read aozora zip {}", path.display()))?;
+
+    // Aozora distributes one text file per work inside its own zip, located under
+    // `cards/<author>/files/<work>.zip`. We open those, decode SJIS, strip the
+    // ruby/annotation markup, and yield one Document per work.
+    let cleaner = AozoraCleaner::new();
+    let n_entries = outer.len();
+    let mut last_progress: u64 = 0;
+    for index in 0..n_entries {
+        let mut entry = outer.by_index(index)?;
+        let entry_name = entry.name().to_string();
+        let approx = ((index as u64 + 1) * total_bytes) / n_entries.max(1) as u64;
+        if approx > last_progress {
+            progress.inc(approx - last_progress);
+            last_progress = approx;
+        }
+        if !entry_name.contains("/files/") || !entry_name.ends_with(".zip") {
+            continue;
+        }
+        let mut buf = Vec::new();
+        entry.read_to_end(&mut buf)?;
+        drop(entry);
+        let mut inner = match ZipArchive::new(Cursor::new(buf)) {
+            Ok(z) => z,
+            Err(_) => continue,
+        };
+        for inner_index in 0..inner.len() {
+            let mut inner_entry = match inner.by_index(inner_index) {
+                Ok(e) => e,
+                Err(_) => continue,
+            };
+            let inner_name = inner_entry.name().to_string();
+            if !inner_name.to_ascii_lowercase().ends_with(".txt") {
+                continue;
+            }
+            let mut raw = Vec::new();
+            if inner_entry.read_to_end(&mut raw).is_err() {
+                continue;
+            }
+            let (decoded, _, _) = SHIFT_JIS.decode(&raw);
+            let cleaned = cleaner.clean(&decoded);
+            if cleaned.is_empty() {
+                continue;
+            }
+            let doc = Document {
+                title: String::new(),
+                text: cleaned,
+            };
+            if matches!(on_doc(&doc)?, PageAction::Stop) {
+                return Ok(());
+            }
+        }
+    }
+    if last_progress < total_bytes {
+        progress.inc(total_bytes - last_progress);
+    }
+    Ok(())
+}
+
+fn walk_cc100<F>(
+    path: &Path,
+    progress: ProgressBar,
+    max_docs: Option<usize>,
+    on_doc: &mut F,
+) -> Result<()>
+where
+    F: FnMut(&Document) -> Result<PageAction>,
+{
+    let file = File::open(path).with_context(|| format!("failed to open {}", path.display()))?;
+    let counting_reader = CountingReader {
+        inner: file,
+        progress,
+    };
+    let decoder = XzDecoder::new(counting_reader);
+    let reader = BufReader::with_capacity(1 << 20, decoder);
+
+    let mut buffer = String::new();
+    let mut docs_emitted: usize = 0;
+    for line in reader.lines() {
+        let line = line?;
+        if line.trim().is_empty() {
+            if !buffer.trim().is_empty() {
+                let doc = Document {
+                    title: String::new(),
+                    text: std::mem::take(&mut buffer),
+                };
+                if matches!(on_doc(&doc)?, PageAction::Stop) {
+                    return Ok(());
+                }
+                docs_emitted += 1;
+                if let Some(limit) = max_docs {
+                    if docs_emitted >= limit {
+                        return Ok(());
+                    }
+                }
+            } else {
+                buffer.clear();
+            }
+        } else {
+            if !buffer.is_empty() {
+                buffer.push('\n');
+            }
+            buffer.push_str(&line);
+        }
+    }
+    if !buffer.trim().is_empty() {
+        let doc = Document {
+            title: String::new(),
+            text: buffer,
+        };
+        on_doc(&doc)?;
+    }
+    Ok(())
+}
+
+struct AozoraCleaner {
+    ruby_paren: Regex,
+    ruby_bar: Regex,
+    annotation: Regex,
+    header_rule: Regex,
+    space: Regex,
+}
+
+impl AozoraCleaner {
+    fn new() -> Self {
+        Self {
+            // 《...》 ruby annotations
+            ruby_paren: Regex::new(r"《[^》]*》").unwrap(),
+            // ｜ marks the start of a base reading; drop the marker, keep base text.
+            ruby_bar: Regex::new(r"｜").unwrap(),
+            // ［＃...］ typesetting directives
+            annotation: Regex::new(r"［＃[^］]*］").unwrap(),
+            // Aozora delimits header/footer with long ーー runs
+            header_rule: Regex::new(r"-{10,}|ー{5,}|━{5,}").unwrap(),
+            space: Regex::new(r"[ \t\u{3000}]+").unwrap(),
+        }
+    }
+
+    fn clean(&self, text: &str) -> String {
+        // Strip header (everything before the first rule line) and footer (everything after the last).
+        let stripped = strip_aozora_header_footer(text, &self.header_rule);
+        let mut value = self.ruby_paren.replace_all(stripped, "").into_owned();
+        value = self.ruby_bar.replace_all(&value, "").into_owned();
+        value = self.annotation.replace_all(&value, " ").into_owned();
+        value = self.space.replace_all(&value, " ").into_owned();
+        value.trim().to_string()
+    }
+}
+
+fn strip_aozora_header_footer<'a>(text: &'a str, rule: &Regex) -> &'a str {
+    let matches: Vec<_> = rule.find_iter(text).collect();
+    if matches.len() < 2 {
+        return text;
+    }
+    // Aozora convention: header is bounded by the first two rule lines; footer by the last two.
+    let start = matches.get(1).map(|m| m.end()).unwrap_or(0);
+    let end = matches
+        .get(matches.len().saturating_sub(2))
+        .map(|m| m.start())
+        .unwrap_or(text.len());
+    if start < end {
+        &text[start..end]
+    } else {
+        text
+    }
+}
+
+fn process_count_doc(
+    doc: &Document,
     stopwords: &HashSet<String>,
     worker: &mut Worker,
     counts: &mut LocalCounts,
@@ -530,16 +813,12 @@ fn process_count_page(
     limit_pages: Option<usize>,
     global_page_limit: &AtomicUsize,
 ) -> Result<PageAction> {
-    if page.namespace != "0" || page.redirect {
-        return Ok(PageAction::Continue);
-    }
     if !reserve_page_slot(limit_pages, global_page_limit) {
         return Ok(PageAction::Stop);
     }
 
-    let title_pairs = tokenize_pairs(&page.title, worker, stopwords, min_length);
-    let clean_text = cleaner.clean(&page.text, &page.title);
-    let text_pairs = tokenize_pairs(&clean_text, worker, stopwords, min_length);
+    let title_pairs = tokenize_pairs(&doc.title, worker, stopwords, min_length);
+    let text_pairs = tokenize_pairs(&doc.text, worker, stopwords, min_length);
     if title_pairs.is_empty() && text_pairs.is_empty() {
         return Ok(PageAction::Continue);
     }
@@ -762,7 +1041,7 @@ fn write_tsv(path: &Path, selected: &[SelectedToken]) -> Result<()> {
 }
 
 fn build_state(
-    input_paths: &[PathBuf],
+    sources: &[InputSource],
     dictionary_bytes: Arc<Vec<u8>>,
     stopwords: Arc<HashSet<String>>,
     cleaner: Arc<Cleaner>,
@@ -771,6 +1050,7 @@ fn build_state(
     min_length: usize,
     window_size: usize,
     selected: &[SelectedToken],
+    cc100_max_docs: Option<usize>,
 ) -> Result<BuildState> {
     let dictionary = Dictionary::read(Cursor::new(dictionary_bytes.as_slice()))?;
     let tokenizer = Tokenizer::new(dictionary);
@@ -787,21 +1067,17 @@ fn build_state(
     };
     let mut processed_pages = 0usize;
 
-    for path in input_paths {
+    for source in sources {
         let mut worker = tokenizer.new_worker();
-        walk_pages(path, progress.clone(), |page| {
-            if page.namespace != "0" || page.redirect {
-                return Ok(PageAction::Continue);
-            }
+        walk_documents(source, &cleaner, progress.clone(), cc100_max_docs, |doc| {
             if let Some(limit) = limit_pages {
                 if processed_pages >= limit {
                     return Ok(PageAction::Stop);
                 }
             }
 
-            let title_pairs = tokenize_pairs(&page.title, &mut worker, &stopwords, min_length);
-            let clean_text = cleaner.clean(&page.text, &page.title);
-            let text_pairs = tokenize_pairs(&clean_text, &mut worker, &stopwords, min_length);
+            let title_pairs = tokenize_pairs(&doc.title, &mut worker, &stopwords, min_length);
+            let text_pairs = tokenize_pairs(&doc.text, &mut worker, &stopwords, min_length);
             if title_pairs.is_empty() && text_pairs.is_empty() {
                 return Ok(PageAction::Continue);
             }
