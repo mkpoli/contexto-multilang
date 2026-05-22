@@ -24,6 +24,7 @@ export type GamePuzzle = {
 	semanticCategory: string | null;
 	intro: string;
 	closestWords: GuessProfile[];
+	hintLadder: GuessProfile[];
 };
 
 export type GuessLookupResponse = {

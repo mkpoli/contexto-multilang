@@ -178,38 +178,37 @@
 	function pickRankHint(): GuessProfile | null {
 		if (!puzzle) return null;
 
-		const guessedWords = new Set(history.map((entry) => entry.word));
-		const candidates = puzzle.closestWords.filter(
-			(entry) => entry.rank > 1 && !guessedWords.has(entry.word)
+		const guessedKeys = new Set(history.map((entry) => entry.key ?? entry.word));
+		// Hint candidates: the absolute top-12 closest *and* the rank-banded
+		// ladder. The ladder is what saves us when bestRank is huge — without
+		// it, the only available candidates are rank 2..13, which is far too
+		// strong a hint when the player is sitting at rank 20000.
+		const candidates = [...puzzle.closestWords, ...puzzle.hintLadder].filter(
+			(entry) => entry.rank > 1 && !guessedKeys.has(entry.key ?? entry.word)
 		);
 		if (candidates.length === 0) return null;
 
-		if (bestRank === null) {
-			return (
-				candidates.find((entry) => entry.rank >= 120 && entry.rank <= 320) ??
-				candidates.find((entry) => entry.rank >= 80 && entry.rank <= 420) ??
-				candidates[candidates.length - 1]
-			);
+		// First hint, no best yet: aim for rank ~300 (gentle starting nudge).
+		// Otherwise aim to cut the rank by ~3x — gradual progression.
+		const targetRank = bestRank === null ? 300 : Math.max(20, Math.floor(bestRank / 3));
+
+		const eligible =
+			bestRank === null
+				? candidates
+				: candidates.filter((entry) => entry.rank < bestRank);
+		if (eligible.length === 0) return null;
+
+		// Pick the candidate closest to targetRank.
+		let best = eligible[0];
+		let bestDistance = Math.abs(best.rank - targetRank);
+		for (let i = 1; i < eligible.length; i += 1) {
+			const distance = Math.abs(eligible[i].rank - targetRank);
+			if (distance < bestDistance) {
+				best = eligible[i];
+				bestDistance = distance;
+			}
 		}
-
-		const betterCandidates = candidates
-			.filter((entry) => entry.rank < bestRank)
-			.sort((a, b) => b.rank - a.rank || a.similarity - b.similarity);
-
-		if (betterCandidates.length === 0) return null;
-
-		const windows = [
-			Math.max(15, Math.floor(bestRank * 0.15)),
-			Math.max(35, Math.floor(bestRank * 0.3)),
-			Math.max(70, Math.floor(bestRank * 0.5)),
-			bestRank
-		];
-		for (const window of windows) {
-			const nearby = betterCandidates.find((entry) => entry.rank >= Math.max(2, bestRank - window));
-			if (nearby) return nearby;
-		}
-
-		return betterCandidates[0] ?? null;
+		return best;
 	}
 
 	function applyGuessResult(match: GuessProfile, source: 'user' | 'hint' | 'giveup') {

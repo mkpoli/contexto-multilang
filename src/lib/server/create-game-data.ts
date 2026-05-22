@@ -39,7 +39,13 @@ type AnswerCache = {
 	ranks: Uint32Array;
 	scores: Uint16Array;
 	neighbors: GuessProfile[];
+	hintLadder: GuessProfile[];
 };
+
+// Logarithmic rank stops we sample as hint candidates. Each entry feeds
+// into the client's "graduated proximity hint" — closing the gap by ~3x
+// per hint instead of jumping from rank 20000 straight to rank 13.
+const HINT_LADDER_RANKS = [30, 100, 300, 1000, 3000, 10000];
 
 type CreateGameDataOptions = {
 	metadataAssetUrl: string;
@@ -200,7 +206,20 @@ export const createGameData = ({
 			}
 		}
 
-		return { ranks, scores, neighbors };
+		const hintLadder: GuessProfile[] = [];
+		for (const targetRank of HINT_LADDER_RANKS) {
+			if (targetRank > scorePairs.length) continue;
+			const pair = scorePairs[targetRank - 1];
+			if (pair.id === answerId) continue;
+			hintLadder.push({
+				word: displayWord(vocab[pair.id]),
+				key: vocab[pair.id].word,
+				rank: targetRank,
+				similarity: toPercent(pair.score)
+			});
+		}
+
+		return { ranks, scores, neighbors, hintLadder };
 	};
 
 	const getAnswerCache = async (
@@ -262,7 +281,8 @@ export const createGameData = ({
 				difficulty,
 				semanticCategory: data.categories[String(answerId)] ?? null,
 				intro: buildIntro(row),
-				closestWords: cache?.neighbors ?? []
+				closestWords: cache?.neighbors ?? [],
+				hintLadder: cache?.hintLadder ?? []
 			};
 		},
 
