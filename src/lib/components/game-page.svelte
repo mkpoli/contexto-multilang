@@ -31,7 +31,7 @@
 	let { game }: { game: GameId } = $props();
 
 	const MAX_RANK_HINT_USES = 3;
-	const MIN_GUESSES_BEFORE_GIVEUP = 30;
+	const MIN_GUESSES_BEFORE_GIVEUP = 5;
 
 	const normalize = (value: string) => value.trim().replace(/\s+/g, '');
 
