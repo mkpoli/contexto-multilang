@@ -54,6 +54,9 @@ export type GameCopy = {
 	proximityExhaustedFeedback: string;
 	noMoreProximityFeedback: string;
 	characterHintFeedback: string;
+	giveUpLabel: string;
+	giveUpConfirmPrompt: string;
+	giveUpFeedback: string;
 	proximityHintNote: string;
 	originalGameLabel: string;
 	gameSelectorLabel: string;
@@ -145,6 +148,9 @@ export const getGameCopy = (game: GameId): GameCopy => {
 			{ n: token('n'), char: token('char') },
 			{ locale }
 		),
+		giveUpLabel: m.game_give_up_label({}, { locale }),
+		giveUpConfirmPrompt: m.game_give_up_confirm_prompt({}, { locale }),
+		giveUpFeedback: m.game_give_up_feedback({ answer: token('answer') }, { locale }),
 		proximityHintNote: m.game_proximity_hint_note(
 			{ used: token('used'), max: token('max') },
 			{ locale }
