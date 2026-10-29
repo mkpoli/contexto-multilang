@@ -68,5 +68,17 @@
 	"game_proximity_hint_note": "Proximity hint {used}/{max}",
 	"game_original_link_label": "Original game PT / EN / ES",
 	"game_selector_label": "Game selector",
-	"game_similarity_title": "Similarity {similarity}% | Log {percent}"
+	"game_similarity_title": "Similarity {similarity}% | Log {percent}",
+	"sponsor_label": "Sponsor",
+	"sponsor_lead": "I make this game out of love for words, and I've put several hundred dollars of my own into it. I don't have a job, and my small TA pay doesn't cover rent and food. Some days I can barely afford to eat.",
+	"sponsor_ask": "Please help me keep going 🥺 Even one dollar helps me eat today.",
+	"sponsor_howTo": "How to help",
+	"sponsor_step1": "Tap Ko-fi below.",
+	"sponsor_step2": "Pick any amount. Small is fine.",
+	"sponsor_step3": "Pay with PayPal or a card. No sign-up needed.",
+	"sponsor_kofi": "One-time or monthly",
+	"sponsor_company": "Company sponsorship",
+	"sponsor_companyHint": "I'd love to put your ad on this site. Please write to mkpoli@mkpo.li.",
+	"sponsor_thanks": "Thank you for reading this far. Your help keeps me fed and keeps this game growing 💗",
+	"sponsor_close": "Close"
 }

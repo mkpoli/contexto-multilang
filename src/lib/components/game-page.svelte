@@ -1,7 +1,8 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 
-	import { getGameCopy } from '$lib/i18n/game-copy';
+	import SponsorButton from '$lib/components/sponsor-button.svelte';
+	import { getGameCopy, getGameLocale } from '$lib/i18n/game-copy';
 	import {
 		DEFAULT_DIFFICULTY,
 		DIFFICULTIES,
@@ -214,9 +215,7 @@
 		const targetRank = chooseHintTargetRank(bestRank);
 
 		const eligible =
-			bestRank === null
-				? candidates
-				: candidates.filter((entry) => entry.rank < bestRank);
+			bestRank === null ? candidates : candidates.filter((entry) => entry.rank < bestRank);
 		if (eligible.length === 0) return null;
 
 		// Pick the candidate closest to targetRank.
@@ -606,6 +605,7 @@
 			<div class="hero-topline">
 				<p class="eyebrow">{gameCopy.eyebrow}</p>
 				<div class="hero-meta-row">
+					<SponsorButton locale={getGameLocale(game)} />
 					<a class="origin-link" href="https://contexto.me/en/" target="_blank" rel="noreferrer">
 						{gameCopy.originalGameLabel}
 					</a>

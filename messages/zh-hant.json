@@ -68,5 +68,17 @@
 	"game_proximity_hint_note": "接近提示 {used}/{max}",
 	"game_original_link_label": "原版遊戲 PT / EN / ES",
 	"game_selector_label": "遊戲選擇",
-	"game_similarity_title": "相似度 {similarity}%｜對數 {percent}"
+	"game_similarity_title": "相似度 {similarity}%｜對數 {percent}",
+	"sponsor_label": "贊助",
+	"sponsor_lead": "做這個遊戲純粹是出於對詞語的熱愛，我自己也陸續自掏腰包貼了好幾百美元進去。我目前沒有工作，微薄的助教薪水連付房租和三餐都很勉強，有時候甚至快要吃不起飯了……",
+	"sponsor_ask": "拜託幫幫我，讓我能繼續撐下去🥺 哪怕只有1⁠美元，都能讓我今天有飯吃。",
+	"sponsor_howTo": "如何贊助我",
+	"sponsor_step1": "點擊下方的Ko-fi。",
+	"sponsor_step2": "金額隨意，少少的也沒關係。",
+	"sponsor_step3": "使用PayPal或信用卡付款，不需要註冊帳號。",
+	"sponsor_kofi": "單次或每月贊助",
+	"sponsor_company": "企業贊助",
+	"sponsor_companyHint": "我很樂意在網站上放置你的廣告，歡迎來信至mkpoli@mkpo.li。",
+	"sponsor_thanks": "謝謝你看到這裡。有你的幫助，我才能填飽肚子，這個遊戲也才能繼續成長茁壯💗",
+	"sponsor_close": "關閉"
 }
