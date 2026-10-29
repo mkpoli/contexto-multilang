@@ -111,7 +111,7 @@
 					><path d="M5 12h14m-6-6 6 6-6 6" /></svg
 				>
 			</a>
-			<a class="company" href="mailto:mkpoli@mkpo.li?subject=Sponsorship%20on%20contexto-multilang">
+			<a class="company" href="mailto:mkpoli@mkpo.li?subject=Sponsorship%20on%20contexto.mkpo.li">
 				<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16v12H4V6Zm0 1 8 6 8-6" /></svg>
 				<span class="copy"><strong>{copy.company}</strong><small>{copy.companyHint}</small></span>
 			</a>
