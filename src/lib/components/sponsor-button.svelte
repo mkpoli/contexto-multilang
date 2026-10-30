@@ -3,7 +3,7 @@
 	import type { Locale } from '$lib/paraglide/runtime';
 
 	// The header's Sponsor pill, led by the author's face, and the dialog it opens: her portrait,
-	// why she needs help, then three steps that end at the Ko-fi button.
+	// what a tip pays for, then three steps that end at the Ko-fi button.
 	let { locale }: { locale: Locale } = $props();
 
 	let open = $state(false);
