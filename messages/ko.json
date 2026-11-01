@@ -68,5 +68,17 @@
 	"game_proximity_hint_note": "근접 힌트 {used}/{max}",
 	"game_original_link_label": "원본 게임 PT / EN / ES",
 	"game_selector_label": "게임 선택",
-	"game_similarity_title": "유사도 {similarity}% | 로그 {percent}"
+	"game_similarity_title": "유사도 {similarity}% | 로그 {percent}",
+	"sponsor_label": "후원",
+	"sponsor_lead": "Contexto Multilang은 별도의 지원금 없이 혼자 만들고 있어요. 누구나 무료로 이용할 수 있고, 앞으로도 계속 무료로 운영하고 싶어요.",
+	"sponsor_ask": "Contexto Multilang이 도움이 되셨다면 Ko-fi로 소액 후원을 보내 주세요. 앱을 개선하는 데 더 많은 시간을 쓸 수 있어요.",
+	"sponsor_howTo": "후원 방법",
+	"sponsor_step1": "아래 Ko-fi 버튼을 눌러 주세요.",
+	"sponsor_step2": "원하는 금액을 정해 주세요.",
+	"sponsor_step3": "PayPal이나 카드로 결제해 주세요. 회원가입은 필요 없어요.",
+	"sponsor_kofi": "일회성 또는 월 정기 후원",
+	"sponsor_company": "기업 후원",
+	"sponsor_companyHint": "기업도 후원할 수 있어요. mkpoli@mkpo.li로 문의해 주세요.",
+	"sponsor_thanks": "Contexto Multilang을 이용해 주셔서 감사해요 💗",
+	"sponsor_close": "닫기"
 }

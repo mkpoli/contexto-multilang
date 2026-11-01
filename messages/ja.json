@@ -68,5 +68,17 @@
 	"game_proximity_hint_note": "近さヒント {used}/{max}",
 	"game_original_link_label": "原版ゲーム PT / EN / ES",
 	"game_selector_label": "ゲーム選択",
-	"game_similarity_title": "類似度 {similarity}% | 対数 {percent}"
+	"game_similarity_title": "類似度 {similarity}% | 対数 {percent}",
+	"sponsor_label": "スポンサー",
+	"sponsor_lead": "Contexto Multilangは資金援助を受けず、個人で開発しています。誰でも無料で利用でき、これからもずっと無料のまま続けたいと思っています。",
+	"sponsor_ask": "もしContexto Multilangがお役に立っているなら、Ko-fiでチップをいただけると、さらなる改善を続けるための時間を作ることができます。",
+	"sponsor_howTo": "チップの送り方",
+	"sponsor_step1": "下のKo-fiをタップ。",
+	"sponsor_step2": "お好きな金額を選択。",
+	"sponsor_step3": "PayPalまたはカードでお支払い。アカウント登録は不要です。",
+	"sponsor_kofi": "1回のみ、または毎月",
+	"sponsor_company": "企業スポンサー",
+	"sponsor_companyHint": "企業様からのスポンサーも受け付けています。mkpoli@mkpo.liまでお気軽にご連絡ください。",
+	"sponsor_thanks": "Contexto Multilangをご利用いただきありがとうございます💗",
+	"sponsor_close": "閉じる"
 }

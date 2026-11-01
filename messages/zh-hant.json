@@ -68,5 +68,17 @@
 	"game_proximity_hint_note": "接近提示 {used}/{max}",
 	"game_original_link_label": "原版遊戲 PT / EN / ES",
 	"game_selector_label": "遊戲選擇",
-	"game_similarity_title": "相似度 {similarity}%｜對數 {percent}"
+	"game_similarity_title": "相似度 {similarity}%｜對數 {percent}",
+	"sponsor_label": "贊助",
+	"sponsor_lead": "Contexto Multilang是我獨立開發的，沒有任何資金支持。目前所有人都能免費使用，我也希望一直維持下去。",
+	"sponsor_ask": "如果Contexto Multilang對你有幫助，歡迎透過Ko-fi小額贊助，讓我有更多時間繼續改進。",
+	"sponsor_howTo": "如何贊助",
+	"sponsor_step1": "點選下方的Ko-fi。",
+	"sponsor_step2": "金額隨意。",
+	"sponsor_step3": "使用PayPal或信用卡付款，不用註冊帳號。",
+	"sponsor_kofi": "單次或每月贊助",
+	"sponsor_company": "企業贊助",
+	"sponsor_companyHint": "也歡迎企業贊助。請來信mkpoli@mkpo.li。",
+	"sponsor_thanks": "謝謝你使用Contexto Multilang 💗",
+	"sponsor_close": "關閉"
 }
