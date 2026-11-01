@@ -215,7 +215,9 @@
 		const targetRank = chooseHintTargetRank(bestRank);
 
 		const eligible =
-			bestRank === null ? candidates : candidates.filter((entry) => entry.rank < bestRank);
+			bestRank === null
+				? candidates
+				: candidates.filter((entry) => entry.rank < bestRank);
 		if (eligible.length === 0) return null;
 
 		// Pick the candidate closest to targetRank.
