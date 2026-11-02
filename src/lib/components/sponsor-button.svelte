@@ -27,6 +27,8 @@
 		ofuse: m.sponsor_ofuse({}, { locale }),
 		company: m.sponsor_company({}, { locale }),
 		companyHint: m.sponsor_companyHint({}, { locale }),
+		supporters: m.sponsor_supporters({}, { locale }),
+		anonymous: m.sponsor_anonymous({}, { locale }),
 		thanks: m.sponsor_thanks({}, { locale })
 	});
 
@@ -46,6 +48,10 @@
 	const heart =
 		'M12 21s-8.5-5.1-8.5-11.3A4.7 4.7 0 0 1 12 6.9a4.7 4.7 0 0 1 8.5 2.8C20.5 15.9 12 21 12 21Z';
 </script>
+
+<svelte:head>
+	<script type="module" src="https://supporters.mkpo.li/roll.js"></script>
+</svelte:head>
 
 {#snippet kofi()}
 	<a class="tip kofi" href="https://ko-fi.com/mkpoli" target="_blank" rel="noreferrer noopener">
@@ -129,6 +135,7 @@
 				<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16v12H4V6Zm0 1 8 6 8-6" /></svg>
 				<span class="copy"><strong>{copy.company}</strong><small>{copy.companyHint}</small></span>
 			</a>
+			<supporters-roll label={copy.supporters} anonymous={copy.anonymous}></supporters-roll>
 			<p class="thanks">{copy.thanks}</p>
 		</div>
 	</dialog>

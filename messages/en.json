@@ -70,6 +70,8 @@
 	"game_selector_label": "Game selector",
 	"game_similarity_title": "Similarity {similarity}% | Log {percent}",
 	"sponsor_label": "Sponsor",
+	"sponsor_supporters": "Recent supporters",
+	"sponsor_anonymous": "Someone",
 	"sponsor_lead": "I build Contexto Multilang on my own, with no funding behind it. It's free for everyone, and I'd like to keep it that way.",
 	"sponsor_ask": "If Contexto Multilang is useful to you, a tip gives me time to keep improving it.",
 	"sponsor_howTo": "How to tip",

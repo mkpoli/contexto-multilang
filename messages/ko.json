@@ -70,6 +70,8 @@
 	"game_selector_label": "게임 선택",
 	"game_similarity_title": "유사도 {similarity}% | 로그 {percent}",
 	"sponsor_label": "후원",
+	"sponsor_supporters": "최근 후원자",
+	"sponsor_anonymous": "익명",
 	"sponsor_lead": "Contexto Multilang은 별도의 지원금 없이 혼자 만들고 있어요. 누구나 무료로 이용할 수 있고, 앞으로도 계속 무료로 운영하고 싶어요.",
 	"sponsor_ask": "Contexto Multilang이 도움이 되셨다면 소액 후원을 보내 주세요. 앱을 개선하는 데 더 많은 시간을 쓸 수 있어요.",
 	"sponsor_howTo": "후원 방법",
