@@ -68,7 +68,5 @@
 	"game_proximity_hint_note": "Proximity hint {used}/{max}",
 	"game_original_link_label": "moto ne sinot PT / EN / ES",
 	"game_selector_label": "Game selector",
-	"game_similarity_title": "Similarity {similarity}% | Log {percent}",
-	"sponsor_supporters": "Tane ikasuy utar",
-	"sponsor_anonymous": "Nen ka"
+	"game_similarity_title": "Similarity {similarity}% | Log {percent}"
 }
