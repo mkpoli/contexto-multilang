@@ -3,8 +3,11 @@
 	import type { Locale } from '$lib/paraglide/runtime';
 
 	// The header's Sponsor pill, led by the author's face, and the dialog it opens: her portrait,
-	// what a tip pays for, then three steps that end at the Ko-fi button.
+	// what a tip pays for, then three steps that end at the Ko-fi and OFUSE buttons,
+	// OFUSE first in Japanese. Each button carries its service's own mark and colour, unaltered.
 	let { locale }: { locale: Locale } = $props();
+
+	const ofuseFirst = $derived(locale.split('-')[0] === 'ja');
 
 	let open = $state(false);
 	let dialog = $state<HTMLDialogElement>();
@@ -21,6 +24,7 @@
 			m.sponsor_step3({}, { locale })
 		],
 		kofi: m.sponsor_kofi({}, { locale }),
+		ofuse: m.sponsor_ofuse({}, { locale }),
 		company: m.sponsor_company({}, { locale }),
 		companyHint: m.sponsor_companyHint({}, { locale }),
 		supporters: m.sponsor_supporters({}, { locale }),
@@ -48,6 +52,26 @@
 <svelte:head>
 	<script type="module" src="https://supporters.mkpo.li/roll.js"></script>
 </svelte:head>
+
+{#snippet kofi()}
+	<a class="tip kofi" href="https://ko-fi.com/mkpoli" target="_blank" rel="noreferrer noopener">
+		<img class="mark" src="/brand/kofi-symbol.svg" alt="" width="34" height="27" />
+		<span class="copy"><strong>Ko-fi</strong><small>{copy.kofi}</small></span>
+		<svg class="arrow" viewBox="0 0 24 24" aria-hidden="true"
+			><path d="M5 12h14m-6-6 6 6-6 6" /></svg
+		>
+	</a>
+{/snippet}
+
+{#snippet ofuse()}
+	<a class="tip ofuse" href="https://ofuse.me/mkpoli" target="_blank" rel="noreferrer noopener">
+		<img class="mark" src="/brand/ofuse-icon.svg" alt="" width="26" height="28" />
+		<span class="copy"><strong>OFUSE</strong><small>{copy.ofuse}</small></span>
+		<svg class="arrow" viewBox="0 0 24 24" aria-hidden="true"
+			><path d="M5 12h14m-6-6 6 6-6 6" /></svg
+		>
+	</a>
+{/snippet}
 
 <button
 	type="button"
@@ -104,19 +128,9 @@
 					{#each copy.steps as step, i (i)}<li>{step}</li>{/each}
 				</ol>
 			</section>
-			<a class="kofi" href="https://ko-fi.com/mkpoli" target="_blank" rel="noreferrer noopener">
-				<span class="mark" aria-hidden="true">
-					<svg viewBox="0 0 24 24"
-						><path
-							d="M4 9h12v6a4 4 0 0 1-4 4H8a4 4 0 0 1-4-4V9Zm12 1h2a2.5 2.5 0 0 1 0 5h-2M8 3v3m4-3v3"
-						/></svg
-					>
-				</span>
-				<span class="copy"><strong>Ko-fi</strong><small>{copy.kofi}</small></span>
-				<svg class="arrow" viewBox="0 0 24 24" aria-hidden="true"
-					><path d="M5 12h14m-6-6 6 6-6 6" /></svg
-				>
-			</a>
+			<div class="tips">
+				{#if ofuseFirst}{@render ofuse()}{@render kofi()}{:else}{@render kofi()}{@render ofuse()}{/if}
+			</div>
 			<a class="company" href="mailto:mkpoli@mkpo.li?subject=Sponsorship%20on%20contexto.mkpo.li">
 				<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16v12H4V6Zm0 1 8 6 8-6" /></svg>
 				<span class="copy"><strong>{copy.company}</strong><small>{copy.companyHint}</small></span>
@@ -162,7 +176,7 @@
 
 	.sponsor:focus-visible,
 	.dismiss:focus-visible,
-	.kofi:focus-visible,
+	.tip:focus-visible,
 	.company:focus-visible {
 		outline: 2px solid var(--sp-ink);
 		outline-offset: 2px;
@@ -267,7 +281,6 @@
 	}
 
 	.dismiss svg,
-	.mark svg,
 	.arrow,
 	.company > svg {
 		fill: none;
@@ -423,32 +436,45 @@
 		transform: translateY(-1px);
 	}
 
-	.kofi {
+	.tips {
+		display: flex;
+		flex-direction: column;
+		gap: 10px;
+	}
+
+	.tip {
 		display: flex;
 		align-items: center;
 		gap: 12px;
 		padding-block: 12px;
 		padding-inline: 12px 18px;
 		border-radius: 999px;
-		background: linear-gradient(135deg, #d81b60, #b0124f);
 		color: #fff;
 		text-decoration: none;
-		box-shadow: 0 6px 16px rgb(216 27 96 / 0.32);
+		box-shadow: 0 6px 16px var(--tip-glow);
 	}
 
-	.mark {
-		display: grid;
+	.kofi {
+		--tip-glow: rgb(32 32 32 / 0.28);
+		--tip-glow-hover: rgb(32 32 32 / 0.38);
+		background: #202020;
+		border: 1px solid rgb(255 255 255 / 0.2);
+	}
+
+	/* OFUSE Blue (#2882a7) taken 4% darker, so the white labels reach 4.5:1. */
+	.ofuse {
+		--tip-glow: rgb(38 125 160 / 0.3);
+		--tip-glow-hover: rgb(38 125 160 / 0.42);
+		background: #267da0;
+		border: 1px solid #267da0;
+	}
+
+	.tip .mark {
+		display: block;
 		flex: none;
-		place-items: center;
 		width: 38px;
-		height: 38px;
-		border-radius: 50%;
-		background: rgb(255 255 255 / 0.22);
-	}
-
-	.mark svg {
-		width: 20px;
-		height: 20px;
+		height: 30px;
+		object-fit: contain;
 	}
 
 	.arrow {
@@ -478,7 +504,11 @@
 		line-height: 1.4;
 	}
 
-	.kofi .copy strong {
+	.tip .copy small {
+		color: #fff;
+	}
+
+	.tip .copy strong {
 		font-size: 1rem;
 	}
 
@@ -554,15 +584,15 @@
 			animation: arrive 0.32s cubic-bezier(0.2, 0.8, 0.2, 1);
 		}
 
-		.kofi {
+		.tip {
 			transition:
 				transform 180ms ease,
 				box-shadow 180ms ease;
 		}
 
-		.kofi:hover {
+		.tip:hover {
 			transform: translateY(-1px);
-			box-shadow: 0 8px 22px rgb(216 27 96 / 0.42);
+			box-shadow: 0 8px 22px var(--tip-glow-hover);
 		}
 	}
 
